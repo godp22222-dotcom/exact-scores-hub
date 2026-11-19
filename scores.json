@@ -1,0 +1,8 @@
+{
+  "updated_at": "2026-11-19T18:28:27.760727+00:00",
+  "date": "2026-11-19",
+  "total_matches": 0,
+  "fixtures_status": "Non-JSON response (HTTP 403): Expecting value: line 1 column 1 (char 0)",
+  "odds_status": "Non-JSON response (HTTP 403): Expecting value: line 1 column 1 (char 0)",
+  "matches": []
+}
