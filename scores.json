@@ -1,10 +1,181 @@
 {
-  "updated_at": "2026-11-19T18:37:55.662552+00:00",
+  "updated_at": "2026-11-19T18:44:21.313191+00:00",
   "date": "2026-11-19",
-  "host_used": "https://rapidapi.com",
+  "host_used": "https://v3.football.api-sports.io",
   "key_length": 32,
-  "total_matches": 0,
-  "fixtures_status": "Non-JSON response (HTTP 404): Expecting value: line 1 column 1 (char 0)",
-  "odds_status": "Non-JSON response (HTTP 404): Expecting value: line 1 column 1 (char 0)",
-  "matches": []
+  "total_matches": 10,
+  "fixtures_status": "OK",
+  "odds_status": "OK",
+  "matches": [
+    {
+      "match": "Corinthians vs Botafogo",
+      "top_exact_scores": [
+        {
+          "score": "1:1",
+          "odd": "6.50"
+        },
+        {
+          "score": "1:0",
+          "odd": "7.00"
+        },
+        {
+          "score": "2:1",
+          "odd": "7.50"
+        }
+      ]
+    },
+    {
+      "match": "Gremio vs Bahia",
+      "top_exact_scores": [
+        {
+          "score": "1:1",
+          "odd": "6.50"
+        },
+        {
+          "score": "2:1",
+          "odd": "9.00"
+        },
+        {
+          "score": "1:0",
+          "odd": "9.50"
+        }
+      ]
+    },
+    {
+      "match": "Vasco DA Gama vs Internacional",
+      "top_exact_scores": [
+        {
+          "score": "1:0",
+          "odd": "7.50"
+        },
+        {
+          "score": "2:0",
+          "odd": "7.50"
+        },
+        {
+          "score": "2:1",
+          "odd": "7.50"
+        }
+      ]
+    },
+    {
+      "match": "Vitoria vs RB Bragantino",
+      "top_exact_scores": [
+        {
+          "score": "1:1",
+          "odd": "6.00"
+        },
+        {
+          "score": "0:1",
+          "odd": "9.00"
+        },
+        {
+          "score": "1:2",
+          "odd": "9.00"
+        }
+      ]
+    },
+    {
+      "match": "Surkhon vs Andijan",
+      "top_exact_scores": [
+        {
+          "score": "1:1",
+          "odd": "6.00"
+        },
+        {
+          "score": "0:1",
+          "odd": "6.00"
+        },
+        {
+          "score": "1:2",
+          "odd": "7.50"
+        }
+      ]
+    },
+    {
+      "match": "C\u00f4ng An Nh\u00e2n D\u00e2n vs Johor Darul Takzim FC",
+      "top_exact_scores": [
+        {
+          "score": "1:2",
+          "odd": "7.00"
+        },
+        {
+          "score": "1:1",
+          "odd": "7.50"
+        },
+        {
+          "score": "0:2",
+          "odd": "9.00"
+        }
+      ]
+    },
+    {
+      "match": "Svay Rieng vs Port FC",
+      "top_exact_scores": [
+        {
+          "score": "1:1",
+          "odd": "6.00"
+        },
+        {
+          "score": "1:2",
+          "odd": "8.50"
+        },
+        {
+          "score": "2:1",
+          "odd": "9.00"
+        }
+      ]
+    },
+    {
+      "match": "FC Fredericia vs Hiller\u00f8d",
+      "top_exact_scores": [
+        {
+          "score": "2:1",
+          "odd": "7.50"
+        },
+        {
+          "score": "2:0",
+          "odd": "8.00"
+        },
+        {
+          "score": "1:0",
+          "odd": "9.50"
+        }
+      ]
+    },
+    {
+      "match": "Dobrudzha vs Fratria",
+      "top_exact_scores": [
+        {
+          "score": "1:1",
+          "odd": "6.00"
+        },
+        {
+          "score": "0:1",
+          "odd": "6.50"
+        },
+        {
+          "score": "1:2",
+          "odd": "7.50"
+        }
+      ]
+    },
+    {
+      "match": "Amiens vs Caen",
+      "top_exact_scores": [
+        {
+          "score": "1:1",
+          "odd": "5.80"
+        },
+        {
+          "score": "1:0",
+          "odd": "7.50"
+        },
+        {
+          "score": "2:1",
+          "odd": "8.00"
+        }
+      ]
+    }
+  ]
 }
