@@ -5,24 +5,7 @@ from datetime import datetime, timezone, timedelta
 from urllib.parse import quote
 
 LIMIT_PER_API = 3
-WAT_TZ = timezone(timedelta(hours=1))
-
-ALL_HALFTIME_EXACT_SCORES = [
-    "0 - 0", "1 - 0", "0 - 1", "1 - 1", "2 - 0", "0 - 2",
-    "2 - 1", "1 - 2", "3 - 0", "0 - 3", "2 - 2", "3 - 1",
-    "1 - 3", "4 - 0", "0 - 4", "3 - 2", "2 - 3", "4 - 1", "1 - 4", "3 - 3"
-]
-
-ALL_FULLTIME_EXACT_SCORES = [
-    "0 - 0", "1 - 0", "0 - 1", "1 - 1", "2 - 0", "0 - 2",
-    "2 - 1", "1 - 2", "3 - 0", "0 - 3", "2 - 2", "3 - 1",
-    "1 - 3", "4 - 0", "0 - 4", "3 - 2", "2 - 3", "4 - 1",
-    "1 - 4", "5 - 0", "0 - 5", "3 - 3", "4 - 2", "2 - 4",
-    "5 - 1", "1 - 5", "6 - 0", "0 - 6", "4 - 3", "3 - 4",
-    "5 - 2", "2 - 5", "6 - 1", "1 - 6", "4 - 4", "5 - 3",
-    "3 - 5", "6 - 2", "2 - 6", "5 - 4", "4 - 5", "6 - 3",
-    "3 - 6", "5 - 5", "6 - 4", "4 - 6", "6 - 5", "5 - 6", "6 - 6"
-]
+WAT_TZ = timezone(timedelta(hours=1))  # Nigeria Time (UTC+1)
 
 
 def resolve_ip(host):
@@ -67,34 +50,26 @@ def format_wat(raw_dt):
         return str(raw_dt)
 
 
-def parse_and_auto_pick_odds(values_list, fallback_pick):
-    parsed = []
+def pick_single_best_odd(values_list):
+    """Returns ONLY the single #1 lowest-odds exact scoreline (e.g. '1 - 0') with zero extra options."""
+    best_odd = 9999.0
+    best_score = "unavailable"
     for v in values_list:
         val_str = str(v.get("value", "")).replace(":", "-").strip()
         try:
-            odd_num = float(v.get("odd", 999))
+            odd_num = float(v.get("odd", 9999))
         except Exception:
-            odd_num = 999.0
+            odd_num = 9999.0
         parts = val_str.split("-")
         if len(parts) == 2 and all(p.strip().isdigit() for p in parts):
             hg, ag = map(int, parts)
-            parsed.append({
-                "total": hg + ag,
-                "hg": hg,
-                "ag": ag,
-                "odd": odd_num,
-                "label": f"{hg} - {ag} (odds {odd_num:.2f})"
-            })
-
-    if not parsed:
-        return fallback_pick, []
-
-    best_item = min(parsed, key=lambda x: x["odd"])
-    parsed.sort(key=lambda x: (x["total"], x["hg"], x["ag"]))
-    board = [item["label"] for item in parsed]
-    return best_item["label"], board
+            if odd_num < best_odd:
+                best_odd = odd_num
+                best_score = f"{hg} - {ag}"
+    return best_score
 
 
+# 1. API-FOOTBALL
 def fetch_api_football():
     key = (os.getenv("API_FOOTBALL_KEY") or "").strip()
     if not key:
@@ -120,8 +95,8 @@ def fetch_api_football():
         home = (teams.get("home") or {}).get("name", "Home")
         away = (teams.get("away") or {}).get("name", "Away")
 
-        auto_ft, api_ft_odds = "1 - 1", []
-        auto_ht, api_ht_odds = "0 - 0", []
+        ht_score = "unavailable"
+        ft_score = "unavailable"
 
         try:
             odds_resp = get_json(host, f"/odds?fixture={fix_id}&bet=10", hdr).get("response") or []
@@ -130,7 +105,7 @@ def fetch_api_football():
                 if bms:
                     bets = next(iter(bms), {}).get("bets") or []
                     if bets:
-                        auto_ft, api_ft_odds = parse_and_auto_pick_odds(next(iter(bets), {}).get("values") or [], "1 - 1")
+                        ft_score = pick_single_best_odd(next(iter(bets), {}).get("values") or [])
         except Exception:
             pass
 
@@ -141,7 +116,7 @@ def fetch_api_football():
                 if bms:
                     bets = next(iter(bms), {}).get("bets") or []
                     if bets:
-                        auto_ht, api_ht_odds = parse_and_auto_pick_odds(next(iter(bets), {}).get("values") or [], "0 - 0")
+                        ht_score = pick_single_best_odd(next(iter(bets), {}).get("values") or [])
         except Exception:
             pass
 
@@ -149,14 +124,13 @@ def fetch_api_football():
             "source": "API-Football",
             "match": f"{home} vs {away}",
             "kickoff_Nigeria": wat,
-            "autoHalfTimeExactScore": auto_ht,
-            "autoFullTimeExactScore": auto_ft,
-            "halfTimeExactScoreBoard": api_ht_odds if api_ht_odds else ALL_HALFTIME_EXACT_SCORES,
-            "fullTimeExactScoreBoard": api_ft_odds if api_ft_odds else ALL_FULLTIME_EXACT_SCORES
+            "halfTimeExactScore": ht_score,
+            "fullTimeExactScore": ft_score
         })
     return out
 
 
+# 2. SPORTMONKS
 def fetch_sportmonks():
     tok = (os.getenv("SPORTMONKS_TOKEN") or "").strip()
     if not tok:
@@ -164,7 +138,7 @@ def fetch_sportmonks():
     host = ".".join(["api", "sportmonks", "com"])
     data = get_json(
         host,
-        f"/v3/football/fixtures?api_token={quote(tok, safe='')}&include=participants&filters=fixtureStates:1&per_page=10"
+        f"/v3/football/fixtures?api_token={quote(tok, safe='')}&include=participants;predictions&filters=fixtureStates:1&per_page=10"
     )
     fixtures = data.get("data") or []
     out = []
@@ -174,21 +148,35 @@ def fetch_sportmonks():
         wat = format_wat(f.get("starting_at", ""))
         if not wat:
             continue
+
         parts = f.get("participants") or []
         home = next((p.get("name") for p in parts if (p.get("meta") or {}).get("location") == "home"), "Home")
         away = next((p.get("name") for p in parts if (p.get("meta") or {}).get("location") == "away"), "Away")
+
+        ft_score = "unavailable"
+        best_prob = -1.0
+        for pred in (f.get("predictions") or []):
+            scores_map = (pred.get("predictions") or {}).get("scores")
+            if isinstance(scores_map, dict):
+                for sc, pr in scores_map.items():
+                    pts = str(sc).split("-")
+                    if len(pts) == 2 and all(x.strip().isdigit() for x in pts) and isinstance(pr, (int, float)):
+                        hg, ag = map(int, pts)
+                        if pr > best_prob:
+                            best_prob = pr
+                            ft_score = f"{hg} - {ag}"
+
         out.append({
             "source": "Sportmonks",
             "match": f"{home} vs {away}",
             "kickoff_Nigeria": wat,
-            "autoHalfTimeExactScore": "1 - 0",
-            "autoFullTimeExactScore": "2 - 1",
-            "halfTimeExactScoreBoard": ALL_HALFTIME_EXACT_SCORES,
-            "fullTimeExactScoreBoard": ALL_FULLTIME_EXACT_SCORES
+            "halfTimeExactScore": "unavailable",
+            "fullTimeExactScore": ft_score
         })
     return out
 
 
+# 3. FOOTBALL-DATA.ORG
 def fetch_football_data():
     key = (os.getenv("FOOTBALL_DATA_KEY") or "").strip()
     if not key:
@@ -207,14 +195,13 @@ def fetch_football_data():
             "source": "Football-Data",
             "match": f"{ho.get('name', 'Home')} vs {ao.get('name', 'Away')}",
             "kickoff_Nigeria": wat,
-            "autoHalfTimeExactScore": "1 - 0",
-            "autoFullTimeExactScore": "2 - 1",
-            "halfTimeExactScoreBoard": ALL_HALFTIME_EXACT_SCORES,
-            "fullTimeExactScoreBoard": ALL_FULLTIME_EXACT_SCORES
+            "halfTimeExactScore": "unavailable",
+            "fullTimeExactScore": "unavailable"
         })
     return out
 
 
+# 4. GOAL-API
 def fetch_goal_api():
     key = (os.getenv("GOAL_API_KEY") or "").strip()
     if not key:
@@ -235,10 +222,8 @@ def fetch_goal_api():
             "source": "GOAL-API",
             "match": f"{m.get('homeTeamName', 'Home')} vs {m.get('awayTeamName', 'Away')}",
             "kickoff_Nigeria": wat,
-            "autoHalfTimeExactScore": "0 - 0",
-            "autoFullTimeExactScore": "1 - 1",
-            "halfTimeExactScoreBoard": ALL_HALFTIME_EXACT_SCORES,
-            "fullTimeExactScoreBoard": ALL_FULLTIME_EXACT_SCORES
+            "halfTimeExactScore": "unavailable",
+            "fullTimeExactScore": "unavailable"
         })
     return out
 
@@ -267,3 +252,5 @@ def main():
         }, f, indent=2)
 
 
+if __name__ == "__main__":
+    main()
