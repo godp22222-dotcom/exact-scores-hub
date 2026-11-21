@@ -9,7 +9,8 @@ LIMIT_PER_API = 3
 
 
 def resolve_host_8888(host):
-    cmd = ["curl", "-sS", "-k", "-m", "8", "-H", "Accept: application/dns-json", f"https://8.8.8{host}&type=A"]
+    doh_url = "https://" + "8.8.8.8" + "/resolve?name=" + host + "&type=A"
+    cmd = ["curl", "-sS", "-k", "-m", "8", "-H", "Accept: application/dns-json", doh_url]
     res = subprocess.run(cmd, capture_output=True, text=True)
     if res.returncode == 0 and res.stdout.strip():
         data = json.loads(res.stdout)
@@ -20,7 +21,7 @@ def resolve_host_8888(host):
 
 
 def get_json(host, path, headers=None):
-    url = f"https://{host}{path}"
+    url = "https://" + host + path
     ip = resolve_host_8888(host)
     cmd = ["curl", "-sS", "-L", "-m", "12", "-H", "Accept: application/json", "-H", "User-Agent: Mozilla/5.0"]
     if ip:
@@ -39,7 +40,6 @@ def poisson_prob(k, lam):
 
 
 def build_sorted_scores(exp_h, exp_a, max_goals=5, top_n=6):
-    """Generates top exact scores and sorts them from SMALLEST total goals to HIGHEST total goals."""
     outcomes = []
     for hg in range(0, max_goals + 1):
         for ag in range(0, max_goals + 1):
@@ -52,7 +52,6 @@ def build_sorted_scores(exp_h, exp_a, max_goals=5, top_n=6):
                 "prob": p
             })
 
-    # Pick top N most likely outcomes first, then sort from smallest score to highest score
     top_likely = sorted(outcomes, key=lambda x: x["prob"], reverse=True)[:top_n]
     sorted_small_to_high = sorted(top_likely, key=lambda x: (x["total"], x["hg"], x["ag"]))
 
@@ -63,7 +62,6 @@ def build_sorted_scores(exp_h, exp_a, max_goals=5, top_n=6):
 
 
 def calculate_ht_and_ft_scores(home_stats, away_stats):
-    """Calculates both Half-Time (HT) and Full-Time (FT) exact scores sorted smallest -> highest."""
     h_played = max(1, home_stats.get("played", 1))
     a_played = max(1, away_stats.get("played", 1))
 
@@ -72,18 +70,15 @@ def calculate_ht_and_ft_scores(home_stats, away_stats):
     a_attack = away_stats.get("gf", 1.2) / a_played
     a_defense = away_stats.get("ga", 1.3) / a_played
 
-    # Full-time expected goals
     ft_exp_home = max(0.3, min(4.5, ((h_attack + a_defense) / 2.0) * 1.12))
     ft_exp_away = max(0.2, min(4.0, (a_attack + h_defense) / 2.0))
 
-    # Half-time expected goals (~44% of full-time goal rate)
     ht_exp_home = max(0.15, ft_exp_home * 0.44)
     ht_exp_away = max(0.10, ft_exp_away * 0.44)
 
     ht_scores = build_sorted_scores(ht_exp_home, ht_exp_away, max_goals=3, top_n=5)
     ft_scores = build_sorted_scores(ft_exp_home, ft_exp_away, max_goals=5, top_n=6)
 
-    # Over 2.5 Full-Time probability
     over_25_prob = 0.0
     for hg in range(0, 6):
         for ag in range(0, 6):
@@ -98,7 +93,6 @@ def calculate_ht_and_ft_scores(home_stats, away_stats):
     }
 
 
-# 1. FOOTBALL-DATA.ORG
 def fetch_football_data_model():
     key = (os.getenv("FOOTBALL_DATA_KEY") or "").strip()
     if not key:
@@ -146,7 +140,6 @@ def fetch_football_data_model():
     return out
 
 
-# 2. API-FOOTBALL
 def fetch_api_football_model():
     key = (os.getenv("API_FOOTBALL_KEY") or "").strip()
     if not key:
@@ -202,7 +195,6 @@ def fetch_api_football_model():
     return out
 
 
-# 3. SPORTMONKS
 def fetch_sportmonks_model():
     raw_token = (os.getenv("SPORTMONKS_TOKEN") or "").strip()
     if not raw_token:
@@ -240,7 +232,6 @@ def fetch_sportmonks_model():
     return out
 
 
-# 4. GOAL-API
 def fetch_goal_api_model():
     key = (os.getenv("GOAL_API_KEY") or "").strip()
     if not key:
@@ -259,3 +250,16 @@ def fetch_goal_api_model():
             an = m.get("awayTeamName")
             hs = int(m.get("homeTeamScore") or 0)
             aws = int(m.get("awayTeamScore") or 0)
+            if hn:
+                rec = team_goals.setdefault(hn, {"played": 0, "gf": 0, "ga": 0})
+                rec["played"] += 1
+                rec["gf"] += hs
+                rec["ga"] += aws
+            if an:
+                rec = team_goals.setdefault(an, {"played": 0, "gf": 0, "ga": 0})
+                rec["played"] += 1
+                rec["gf"] += aws
+                rec["ga"] += hs
+
+    out = []
+    for m in upcoming[:LIMIT_PER_API]:
