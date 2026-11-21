@@ -2,7 +2,7 @@ name: Update Daily Exact Scores
 
 on:
   schedule:
-    - cron: '0 12 * * *' # Runs daily at 12:00 UTC (1:00 PM WAT)
+    - cron: '0 12 * * *' # Runs daily at 12:00 UTC (1:00 PM Nigeria time)
   workflow_dispatch:
 
 permissions:
@@ -14,12 +14,16 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
+          python-version: '3.12'
+
+      - name: Fix DNS resolution on runner
+        run: |
+          sudo bash -c 'echo -e "nameserver 8.8.8.8\nnameserver 1.1.1.1" > /etc/resolv.conf'
 
       - name: Run fetch_scores.py
         env:
