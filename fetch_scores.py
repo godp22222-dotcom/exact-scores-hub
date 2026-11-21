@@ -59,9 +59,9 @@ def predict_scores(home_id, away_id, comp_stats):
             prob = poisson_prob(h, exp_home_ft) * poisson_prob(a, exp_away_ft)
             ft_matrix.append((f"{h}:{a}", prob, h + a))
 
-    ft_matrix.sort(key=lambda x: x[1], reverse=True)
-    best_ft = ft_matrix[0][0]
-    best_ft_prob = round(ft_matrix[0][1] * 100, 1)
+    ft_matrix.sort(key=lambda item: item[1], reverse=True)
+    best_ft, raw_ft_prob, _ = next(iter(ft_matrix))
+    best_ft_prob = round(raw_ft_prob * 100, 1)
 
     ht_matrix = []
     for h in range(5):
@@ -69,9 +69,9 @@ def predict_scores(home_id, away_id, comp_stats):
             prob = poisson_prob(h, exp_home_ht) * poisson_prob(a, exp_away_ht)
             ht_matrix.append((f"{h}:{a}", prob))
 
-    ht_matrix.sort(key=lambda x: x[1], reverse=True)
-    best_ht = ht_matrix[0][0]
-    best_ht_prob = round(ht_matrix[0][1] * 100, 1)
+    ht_matrix.sort(key=lambda item: item[1], reverse=True)
+    best_ht, raw_ht_prob = next(iter(ht_matrix))
+    best_ht_prob = round(raw_ht_prob * 100, 1)
 
     high_score_candidates = [
         {"score": s, "probability": f"{round(p * 100, 1)}%"}
@@ -99,7 +99,7 @@ def predict_scores(home_id, away_id, comp_stats):
         "all_ft_scores": all_ft_scores
     }
 
-url = f"https://football-data.org{date_from}&dateTo={date_to}"
+url = f"{BASE_URL}/matches?dateFrom={date_from}&dateTo={date_to}"
 response = requests.get(url, headers=HEADERS, timeout=30)
 response.raise_for_status()
 data = response.json()
