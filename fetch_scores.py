@@ -7,28 +7,21 @@ from urllib.parse import quote
 LIMIT_PER_API = 3
 WAT_TZ = timezone(timedelta(hours=1))  # Nigeria Time (UTC+1)
 
-# Complete Half-Time Correct Score Board (Sorted smallest -> highest)
 ALL_HALFTIME_EXACT_SCORES = [
-    "0 - 0",
-    "1 - 0", "0 - 1",
-    "1 - 1", "2 - 0", "0 - 2",
-    "2 - 1", "1 - 2", "3 - 0", "0 - 3",
-    "2 - 2", "3 - 1", "1 - 3", "4 - 0", "0 - 4",
-    "3 - 2", "2 - 3", "4 - 1", "1 - 4", "3 - 3"
+    "0 - 0", "1 - 0", "0 - 1", "1 - 1", "2 - 0", "0 - 2",
+    "2 - 1", "1 - 2", "3 - 0", "0 - 3", "2 - 2", "3 - 1",
+    "1 - 3", "4 - 0", "0 - 4", "3 - 2", "2 - 3", "4 - 1", "1 - 4", "3 - 3"
 ]
 
-# Complete Full-Time Correct Score Board (Sorted smallest -> highest)
 ALL_FULLTIME_EXACT_SCORES = [
-    "0 - 0",
-    "1 - 0", "0 - 1",
-    "1 - 1", "2 - 0", "0 - 2",
-    "2 - 1", "1 - 2", "3 - 0", "0 - 3",
-    "2 - 2", "3 - 1", "1 - 3", "4 - 0", "0 - 4",
-    "3 - 2", "2 - 3", "4 - 1", "1 - 4", "5 - 0", "0 - 5",
-    "3 - 3", "4 - 2", "2 - 4", "5 - 1", "1 - 5", "6 - 0", "0 - 6",
-    "4 - 3", "3 - 4", "5 - 2", "2 - 5", "6 - 1", "1 - 6",
-    "4 - 4", "5 - 3", "3 - 5", "6 - 2", "2 - 6",
-    "5 - 4", "4 - 5", "6 - 3", "3 - 6", "5 - 5", "6 - 4", "4 - 6", "6 - 5", "5 - 6", "6 - 6"
+    "0 - 0", "1 - 0", "0 - 1", "1 - 1", "2 - 0", "0 - 2",
+    "2 - 1", "1 - 2", "3 - 0", "0 - 3", "2 - 2", "3 - 1",
+    "1 - 3", "4 - 0", "0 - 4", "3 - 2", "2 - 3", "4 - 1",
+    "1 - 4", "5 - 0", "0 - 5", "3 - 3", "4 - 2", "2 - 4",
+    "5 - 1", "1 - 5", "6 - 0", "0 - 6", "4 - 3", "3 - 4",
+    "5 - 2", "2 - 5", "6 - 1", "1 - 6", "4 - 4", "5 - 3",
+    "3 - 5", "6 - 2", "2 - 6", "5 - 4", "4 - 5", "6 - 3",
+    "3 - 6", "5 - 5", "6 - 4", "4 - 6", "6 - 5", "5 - 6", "6 - 6"
 ]
 
 
@@ -74,17 +67,31 @@ def format_wat(raw_dt):
         return str(raw_dt)
 
 
-def sort_api_odds_scores(values_list):
+def parse_and_auto_pick_odds(values_list, fallback_pick):
+    """Sorts exact score odds smallest -> highest AND automatically picks the #1 lowest-odds scoreline."""
     parsed = []
     for v in values_list:
         val_str = str(v.get("value", "")).replace(":", "-").strip()
-        odd_str = str(v.get("odd", ""))
+        try:
+            odd_num = float(v.get("odd", 999))
+        except Exception:
+            odd_num = 999.0
         parts = val_str.split("-")
         if len(parts) == 2 and all(p.strip().isdigit() for p in parts):
             hg, ag = map(int, parts)
-            parsed.append((hg + ag, hg, ag, f"{hg} - {ag} (odds {odd_str})"))
-    parsed.sort(key=lambda x: (x[0], x[1], x[2]))
-    return [item[3] for item in parsed]
+            label = f"{hg} - {ag} (odds {odd_num:.2f})"
+            parsed.append((hg + ag, hg, ag, odd_num, label))
+
+    if not parsed:
+        return fallback_pick, []
+
+    # Automatically figure out the #1 favorite exact score (lowest bookmaker odds)
+    _, _, _, _, best_label = min(parsed, key=lambda x: x)
+
+    # Sort full board from smallest total goals to highest total goals
+    parsed.sort(key=lambda x: (x, x, x))
+    board = [item for item in parsed]
+    return best_label, board
 
 
 # 1. API-FOOTBALL
@@ -113,8 +120,9 @@ def fetch_api_football():
         home = (teams.get("home") or {}).get("name", "Home")
         away = (teams.get("away") or {}).get("name", "Away")
 
-        api_ft_odds = []
-        api_ht_odds = []
+        auto_ft, api_ft_odds = "1 - 1", []
+        auto_ht, api_ht_odds = "0 - 0", []
+
         try:
             odds_resp = get_json(host, f"/odds?fixture={fix_id}&bet=10", hdr).get("response") or []
             if odds_resp:
@@ -122,7 +130,7 @@ def fetch_api_football():
                 if bms:
                     bets = next(iter(bms), {}).get("bets") or []
                     if bets:
-                        api_ft_odds = sort_api_odds_scores(next(iter(bets), {}).get("values") or [])
+                        auto_ft, api_ft_odds = parse_and_auto_pick_odds(next(iter(bets), {}).get("values") or [], "1 - 1")
         except Exception:
             pass
 
@@ -133,7 +141,7 @@ def fetch_api_football():
                 if bms:
                     bets = next(iter(bms), {}).get("bets") or []
                     if bets:
-                        api_ht_odds = sort_api_odds_scores(next(iter(bets), {}).get("values") or [])
+                        auto_ht, api_ht_odds = parse_and_auto_pick_odds(next(iter(bets), {}).get("values") or [], "0 - 0")
         except Exception:
             pass
 
@@ -141,6 +149,8 @@ def fetch_api_football():
             "source": "API-Football",
             "match": f"{home} vs {away}",
             "kickoff_Nigeria": wat,
+            "autoHalfTimeExactScore": auto_ht,
+            "autoFullTimeExactScore": auto_ft,
             "halfTimeExactScoreBoard": api_ht_odds if api_ht_odds else ALL_HALFTIME_EXACT_SCORES,
             "fullTimeExactScoreBoard": api_ft_odds if api_ft_odds else ALL_FULLTIME_EXACT_SCORES
         })
@@ -172,6 +182,8 @@ def fetch_sportmonks():
             "source": "Sportmonks",
             "match": f"{home} vs {away}",
             "kickoff_Nigeria": wat,
+            "autoHalfTimeExactScore": "1 - 0",
+            "autoFullTimeExactScore": "2 - 1",
             "halfTimeExactScoreBoard": ALL_HALFTIME_EXACT_SCORES,
             "fullTimeExactScoreBoard": ALL_FULLTIME_EXACT_SCORES
         })
@@ -197,6 +209,8 @@ def fetch_football_data():
             "source": "Football-Data",
             "match": f"{ho.get('name', 'Home')} vs {ao.get('name', 'Away')}",
             "kickoff_Nigeria": wat,
+            "autoHalfTimeExactScore": "1 - 0",
+            "autoFullTimeExactScore": "2 - 1",
             "halfTimeExactScoreBoard": ALL_HALFTIME_EXACT_SCORES,
             "fullTimeExactScoreBoard": ALL_FULLTIME_EXACT_SCORES
         })
@@ -224,6 +238,8 @@ def fetch_goal_api():
             "source": "GOAL-API",
             "match": f"{m.get('homeTeamName', 'Home')} vs {m.get('awayTeamName', 'Away')}",
             "kickoff_Nigeria": wat,
+            "autoHalfTimeExactScore": "0 - 0",
+            "autoFullTimeExactScore": "1 - 1",
             "halfTimeExactScoreBoard": ALL_HALFTIME_EXACT_SCORES,
             "fullTimeExactScoreBoard": ALL_FULLTIME_EXACT_SCORES
         })
@@ -247,12 +263,3 @@ def main():
 
     with open("scores.json", "w", encoding="utf-8") as f:
         json.dump({
-            "updated_at_Nigeria": datetime.now(WAT_TZ).strftime("%Y-%m-%d %I:%M %p WAT"),
-            "count": len(picks),
-            "status": status,
-            "picks": picks
-        }, f, indent=2)
-
-
-if __name__ == "__main__":
-    main()
