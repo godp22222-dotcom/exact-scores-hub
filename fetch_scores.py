@@ -5,7 +5,7 @@ from datetime import datetime, timezone, timedelta
 from urllib.parse import quote
 
 LIMIT_PER_API = 3
-WAT_TZ = timezone(timedelta(hours=1))  # Nigeria Time (UTC+1)
+WAT_TZ = timezone(timedelta(hours=1))
 
 ALL_HALFTIME_EXACT_SCORES = [
     "0 - 0", "1 - 0", "0 - 1", "1 - 1", "2 - 0", "0 - 2",
@@ -68,7 +68,6 @@ def format_wat(raw_dt):
 
 
 def parse_and_auto_pick_odds(values_list, fallback_pick):
-    """Sorts exact score odds smallest -> highest AND automatically picks the #1 lowest-odds scoreline."""
     parsed = []
     for v in values_list:
         val_str = str(v.get("value", "")).replace(":", "-").strip()
@@ -79,22 +78,23 @@ def parse_and_auto_pick_odds(values_list, fallback_pick):
         parts = val_str.split("-")
         if len(parts) == 2 and all(p.strip().isdigit() for p in parts):
             hg, ag = map(int, parts)
-            label = f"{hg} - {ag} (odds {odd_num:.2f})"
-            parsed.append((hg + ag, hg, ag, odd_num, label))
+            parsed.append({
+                "total": hg + ag,
+                "hg": hg,
+                "ag": ag,
+                "odd": odd_num,
+                "label": f"{hg} - {ag} (odds {odd_num:.2f})"
+            })
 
     if not parsed:
         return fallback_pick, []
 
-    # Automatically figure out the #1 favorite exact score (lowest bookmaker odds)
-    _, _, _, _, best_label = min(parsed, key=lambda x: x)
-
-    # Sort full board from smallest total goals to highest total goals
-    parsed.sort(key=lambda x: (x, x, x))
-    board = [item for item in parsed]
-    return best_label, board
+    best_item = min(parsed, key=lambda x: x["odd"])
+    parsed.sort(key=lambda x: (x["total"], x["hg"], x["ag"]))
+    board = [item["label"] for item in parsed]
+    return best_item["label"], board
 
 
-# 1. API-FOOTBALL
 def fetch_api_football():
     key = (os.getenv("API_FOOTBALL_KEY") or "").strip()
     if not key:
@@ -157,7 +157,6 @@ def fetch_api_football():
     return out
 
 
-# 2. SPORTMONKS
 def fetch_sportmonks():
     tok = (os.getenv("SPORTMONKS_TOKEN") or "").strip()
     if not tok:
@@ -190,7 +189,6 @@ def fetch_sportmonks():
     return out
 
 
-# 3. FOOTBALL-DATA.ORG
 def fetch_football_data():
     key = (os.getenv("FOOTBALL_DATA_KEY") or "").strip()
     if not key:
@@ -217,7 +215,6 @@ def fetch_football_data():
     return out
 
 
-# 4. GOAL-API
 def fetch_goal_api():
     key = (os.getenv("GOAL_API_KEY") or "").strip()
     if not key:
@@ -263,3 +260,10 @@ def main():
 
     with open("scores.json", "w", encoding="utf-8") as f:
         json.dump({
+            "updated_at_Nigeria": datetime.now(WAT_TZ).strftime("%Y-%m-%d %I:%M %p WAT"),
+            "count": len(picks),
+            "status": status,
+            "picks": picks
+        }, f, indent=2)
+
+
