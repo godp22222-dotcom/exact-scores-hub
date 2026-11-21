@@ -7,6 +7,30 @@ from urllib.parse import quote
 LIMIT_PER_API = 3
 WAT_TZ = timezone(timedelta(hours=1))  # Nigeria Time (UTC+1)
 
+# Complete Half-Time Correct Score Board (Sorted smallest -> highest)
+ALL_HALFTIME_EXACT_SCORES = [
+    "0 - 0",
+    "1 - 0", "0 - 1",
+    "1 - 1", "2 - 0", "0 - 2",
+    "2 - 1", "1 - 2", "3 - 0", "0 - 3",
+    "2 - 2", "3 - 1", "1 - 3", "4 - 0", "0 - 4",
+    "3 - 2", "2 - 3", "4 - 1", "1 - 4", "3 - 3"
+]
+
+# Complete Full-Time Correct Score Board (Sorted smallest -> highest)
+ALL_FULLTIME_EXACT_SCORES = [
+    "0 - 0",
+    "1 - 0", "0 - 1",
+    "1 - 1", "2 - 0", "0 - 2",
+    "2 - 1", "1 - 2", "3 - 0", "0 - 3",
+    "2 - 2", "3 - 1", "1 - 3", "4 - 0", "0 - 4",
+    "3 - 2", "2 - 3", "4 - 1", "1 - 4", "5 - 0", "0 - 5",
+    "3 - 3", "4 - 2", "2 - 4", "5 - 1", "1 - 5", "6 - 0", "0 - 6",
+    "4 - 3", "3 - 4", "5 - 2", "2 - 5", "6 - 1", "1 - 6",
+    "4 - 4", "5 - 3", "3 - 5", "6 - 2", "2 - 6",
+    "5 - 4", "4 - 5", "6 - 3", "3 - 6", "5 - 5", "6 - 4", "4 - 6", "6 - 5", "5 - 6", "6 - 6"
+]
+
 
 def resolve_ip(host):
     ip_addr = ".".join(["8", "8", "8", "8"])
@@ -50,8 +74,21 @@ def format_wat(raw_dt):
         return str(raw_dt)
 
 
-# 1. API-FOOTBALL — Direct /predictions Endpoint
-def fetch_api_football_predictions():
+def sort_api_odds_scores(values_list):
+    parsed = []
+    for v in values_list:
+        val_str = str(v.get("value", "")).replace(":", "-").strip()
+        odd_str = str(v.get("odd", ""))
+        parts = val_str.split("-")
+        if len(parts) == 2 and all(p.strip().isdigit() for p in parts):
+            hg, ag = map(int, parts)
+            parsed.append((hg + ag, hg, ag, f"{hg} - {ag} (odds {odd_str})"))
+    parsed.sort(key=lambda x: (x[0], x[1], x[2]))
+    return [item[3] for item in parsed]
+
+
+# 1. API-FOOTBALL
+def fetch_api_football():
     key = (os.getenv("API_FOOTBALL_KEY") or "").strip()
     if not key:
         raise ValueError("Missing API_FOOTBALL_KEY")
@@ -76,32 +113,49 @@ def fetch_api_football_predictions():
         home = (teams.get("home") or {}).get("name", "Home")
         away = (teams.get("away") or {}).get("name", "Away")
 
-        # Direct call to API-Football's official /predictions endpoint
-        pred_resp = get_json(host, f"/predictions?fixture={fix_id}", hdr).get("response") or []
-        pred_data = next(iter(pred_resp), {}).get("predictions") or {}
-        goals = pred_data.get("goals") or {}
-        winner = (pred_data.get("winner") or {}).get("name", "N/A")
+        api_ft_odds = []
+        api_ht_odds = []
+        try:
+            odds_resp = get_json(host, f"/odds?fixture={fix_id}&bet=10", hdr).get("response") or []
+            if odds_resp:
+                bms = next(iter(odds_resp), {}).get("bookmakers") or []
+                if bms:
+                    bets = next(iter(bms), {}).get("bets") or []
+                    if bets:
+                        api_ft_odds = sort_api_odds_scores(next(iter(bets), {}).get("values") or [])
+        except Exception:
+            pass
+
+        try:
+            ht_resp = get_json(host, f"/odds?fixture={fix_id}&bet=31", hdr).get("response") or []
+            if ht_resp:
+                bms = next(iter(ht_resp), {}).get("bookmakers") or []
+                if bms:
+                    bets = next(iter(bms), {}).get("bets") or []
+                    if bets:
+                        api_ht_odds = sort_api_odds_scores(next(iter(bets), {}).get("values") or [])
+        except Exception:
+            pass
 
         out.append({
-            "source": "API-Football /predictions",
+            "source": "API-Football",
             "match": f"{home} vs {away}",
-            "apiPredictedGoals": f"{goals.get('home', 'N/A')} vs {goals.get('away', 'N/A')}",
-            "apiAdvice": pred_data.get("advice", "N/A"),
-            "apiPredictedWinner": winner,
-            "kickoff_Nigeria": wat
+            "kickoff_Nigeria": wat,
+            "halfTimeExactScoreBoard": api_ht_odds if api_ht_odds else ALL_HALFTIME_EXACT_SCORES,
+            "fullTimeExactScoreBoard": api_ft_odds if api_ft_odds else ALL_FULLTIME_EXACT_SCORES
         })
     return out
 
 
-# 2. SPORTMONKS — Direct include=predictions Endpoint
-def fetch_sportmonks_predictions():
+# 2. SPORTMONKS
+def fetch_sportmonks():
     tok = (os.getenv("SPORTMONKS_TOKEN") or "").strip()
     if not tok:
         raise ValueError("Missing SPORTMONKS_TOKEN")
     host = ".".join(["api", "sportmonks", "com"])
     data = get_json(
         host,
-        f"/v3/football/fixtures?api_token={quote(tok, safe='')}&include=participants;predictions&filters=fixtureStates:1&per_page=10"
+        f"/v3/football/fixtures?api_token={quote(tok, safe='')}&include=participants&filters=fixtureStates:1&per_page=10"
     )
     fixtures = data.get("data") or []
     out = []
@@ -111,33 +165,20 @@ def fetch_sportmonks_predictions():
         wat = format_wat(f.get("starting_at", ""))
         if not wat:
             continue
-
         parts = f.get("participants") or []
         home = next((p.get("name") for p in parts if (p.get("meta") or {}).get("location") == "home"), "Home")
         away = next((p.get("name") for p in parts if (p.get("meta") or {}).get("location") == "away"), "Away")
-
-        # Direct Sportmonks Correct Score & 1X2 predictions from API
-        scores_list = []
-        win_probs = {}
-        for pred in (f.get("predictions") or []):
-            p_obj = pred.get("predictions") or {}
-            if isinstance(p_obj.get("scores"), dict):
-                sorted_sc = sorted(p_obj["scores"].items(), key=lambda kv: kv, reverse=True)
-                scores_list = [f"{sc} ({round(pr, 1)}%)" for sc, pr in sorted_sc[:6]]
-            if "home" in p_obj and "away" in p_obj:
-                win_probs = p_obj
-
         out.append({
-            "source": "Sportmonks /predictions",
+            "source": "Sportmonks",
             "match": f"{home} vs {away}",
-            "apiCorrectScorePredictions": scores_list or ["Not enabled on current Sportmonks plan"],
-            "apiWinProbabilities": win_probs or "Not enabled on current plan",
-            "kickoff_Nigeria": wat
+            "kickoff_Nigeria": wat,
+            "halfTimeExactScoreBoard": ALL_HALFTIME_EXACT_SCORES,
+            "fullTimeExactScoreBoard": ALL_FULLTIME_EXACT_SCORES
         })
     return out
 
 
-# 3. FOOTBALL-DATA.ORG — Direct Upcoming Fixtures
+# 3. FOOTBALL-DATA.ORG
 def fetch_football_data():
     key = (os.getenv("FOOTBALL_DATA_KEY") or "").strip()
     if not key:
@@ -155,12 +196,14 @@ def fetch_football_data():
         out.append({
             "source": "Football-Data",
             "match": f"{ho.get('name', 'Home')} vs {ao.get('name', 'Away')}",
-            "kickoff_Nigeria": wat
+            "kickoff_Nigeria": wat,
+            "halfTimeExactScoreBoard": ALL_HALFTIME_EXACT_SCORES,
+            "fullTimeExactScoreBoard": ALL_FULLTIME_EXACT_SCORES
         })
     return out
 
 
-# 4. GOAL-API — Direct Upcoming Fixtures
+# 4. GOAL-API
 def fetch_goal_api():
     key = (os.getenv("GOAL_API_KEY") or "").strip()
     if not key:
@@ -180,7 +223,9 @@ def fetch_goal_api():
         out.append({
             "source": "GOAL-API",
             "match": f"{m.get('homeTeamName', 'Home')} vs {m.get('awayTeamName', 'Away')}",
-            "kickoff_Nigeria": wat
+            "kickoff_Nigeria": wat,
+            "halfTimeExactScoreBoard": ALL_HALFTIME_EXACT_SCORES,
+            "fullTimeExactScoreBoard": ALL_FULLTIME_EXACT_SCORES
         })
     return out
 
@@ -188,8 +233,8 @@ def fetch_goal_api():
 def main():
     picks, status = [], {}
     for name, fn in [
-        ("API-Football", fetch_api_football_predictions),
-        ("Sportmonks", fetch_sportmonks_predictions),
+        ("API-Football", fetch_api_football),
+        ("Sportmonks", fetch_sportmonks),
         ("Football-Data", fetch_football_data),
         ("GOAL-API", fetch_goal_api)
     ]:
