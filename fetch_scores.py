@@ -1,158 +1,169 @@
 import os
 import json
-import math
-import time
-from datetime import datetime, timezone, timedelta
-import requests
+from datetime import datetime, timezone
+import urllib.request
+import urllib.error
 
-API_KEY = os.environ.get("FOOTBALL_DATA_KEY")
-if not API_KEY:
-    raise ValueError("Missing FOOTBALL_DATA_KEY environment variable in GitHub Secrets.")
+LIMIT_PER_API = 3  # Gets 2–3 exact scores from each API
+TIMEOUT_SEC = 10   # Prevents hanging if an API is slow
 
-BASE_URL = "https://football-data.org"
-HEADERS = {"X-Auth-Token": API_KEY}
 
-now_utc = datetime.now(timezone.utc)
-date_from = now_utc.strftime("%Y-%m-%d")
-date_to = (now_utc + timedelta(days=2)).strftime("%Y-%m-%d")
+def get_today_date():
+    # Dynamically generates YYYY-MM-DD in UTC every time it runs (never expires)
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
-def poisson_prob(k, lam):
-    return (lam ** k) * math.exp(-lam) / math.factorial(k)
 
-def get_team_stats(comp_code, cache):
-    if not comp_code:
-        return {}
-    if comp_code in cache:
-        return cache[comp_code]
-    stats = {}
-    try:
-        time.sleep(6)
-        res = requests.get(f"{BASE_URL}/competitions/{comp_code}/standings", headers=HEADERS, timeout=15)
-        if res.status_code == 200:
-            data = res.json()
-            for standing in data.get("standings", []):
-                if standing.get("type") == "TOTAL":
-                    for row in standing.get("table", []):
-                        team_id = row["team"]["id"]
-                        played = max(row.get("playedGames", 1), 1)
-                        gf = row.get("goalsFor", 1.3 * played)
-                        ga = row.get("goalsAgainst", 1.3 * played)
-                        stats[team_id] = {"avg_gf": gf / played, "avg_ga": ga / played}
-    except Exception as e:
-        print(f"Warning: Could not fetch standings for {comp_code}: {e}")
-    cache[comp_code] = stats
-    return stats
+def safe_get_json(url, headers=None):
+    req = urllib.request.Request(url, headers=headers or {"User-Agent": "ExactScoresHub/1.0"})
+    with urllib.request.urlopen(req, timeout=TIMEOUT_SEC) as response:
+        return json.loads(response.read().decode("utf-8"))
 
-def predict_scores(home_id, away_id, comp_stats):
-    h_stat = comp_stats.get(home_id, {"avg_gf": 1.45, "avg_ga": 1.25})
-    a_stat = comp_stats.get(away_id, {"avg_gf": 1.15, "avg_ga": 1.35})
 
-    exp_home_ft = max(0.35, min(3.8, ((h_stat["avg_gf"] + a_stat["avg_ga"]) / 2) * 1.12))
-    exp_away_ft = max(0.25, min(3.5, ((a_stat["avg_gf"] + h_stat["avg_ga"]) / 2) * 0.92))
+# 1. API-FOOTBALL
+def fetch_api_football(today):
+    key = os.getenv("API_FOOTBALL_KEY")
+    if not key:
+        raise ValueError("API_FOOTBALL_KEY not set")
 
-    exp_home_ht = exp_home_ft * 0.44
-    exp_away_ht = exp_away_ft * 0.44
+    url = f"https://api-sports.io{today}"
+    data = safe_get_json(url, headers={"x-apisports-key": key})
 
-    ft_matrix = []
-    for h in range(6):
-        for a in range(6):
-            prob = poisson_prob(h, exp_home_ft) * poisson_prob(a, exp_away_ft)
-            ft_matrix.append((prob, f"{h}:{a}", h + a))
+    if data.get("errors"):
+        raise ValueError(str(data["errors"]))
 
-    ft_matrix.sort(reverse=True)
-    raw_ft_prob, best_ft, _ = next(iter(ft_matrix))
-    best_ft_prob = round(raw_ft_prob * 100, 1)
+    results = []
+    for item in (data.get("response") or [])[:LIMIT_PER_API]:
+        teams = item.get("teams") or {}
+        goals = item.get("goals") or {}
+        status = (item.get("fixture") or {}).get("status") or {}
+        results.append({
+            "source": "API-Football",
+            "date": today,
+            "match": f"{(teams.get('home') or {}).get('name', 'Home')} vs {(teams.get('away') or {}).get('name', 'Away')}",
+            "exactScore": f"{goals.get('home') if goals.get('home') is not None else 0} - {goals.get('away') if goals.get('away') is not None else 0}",
+            "status": status.get("short", "NS")
+        })
+    return results
 
-    ht_matrix = []
-    for h in range(5):
-        for a in range(5):
-            prob = poisson_prob(h, exp_home_ht) * poisson_prob(a, exp_away_ht)
-            ht_matrix.append((prob, f"{h}:{a}"))
 
-    ht_matrix.sort(reverse=True)
-    raw_ht_prob, best_ht = next(iter(ht_matrix))
-    best_ht_prob = round(raw_ht_prob * 100, 1)
+# 2. FOOTBALL-DATA.ORG
+def fetch_football_data(today):
+    key = os.getenv("FOOTBALL_DATA_KEY")
+    if not key:
+        raise ValueError("FOOTBALL_DATA_KEY not set")
 
-    premium_exact_scores = [
-        {
-            "rank": idx,
-            "score": s,
-            "probability": f"{round(p * 100, 1)}%"
-        }
-        for idx, (p, s, _) in enumerate(ft_matrix[:3], start=1)
+    url = f"https://football-data.org{today}&dateTo={today}"
+    data = safe_get_json(url, headers={"X-Auth-Token": key})
+
+    results = []
+    for m in (data.get("matches") or [])[:LIMIT_PER_API]:
+        home = (m.get("homeTeam") or {}).get("name", "Home")
+        away = (m.get("awayTeam") or {}).get("name", "Away")
+        ft = (m.get("score") or {}).get("fullTime") or {}
+        results.append({
+            "source": "Football-Data",
+            "date": today,
+            "match": f"{home} vs {away}",
+            "exactScore": f"{ft.get('home') if ft.get('home') is not None else 0} - {ft.get('away') if ft.get('away') is not None else 0}",
+            "status": m.get("status", "SCHEDULED")
+        })
+    return results
+
+
+# 3. SPORTMONKS
+def fetch_sportmonks(today):
+    token = os.getenv("SPORTMONKS_TOKEN")
+    if not token:
+        raise ValueError("SPORTMONKS_TOKEN not set")
+
+    url = f"https://sportmonks.com{today}?api_token={token}&include=scores;participants"
+    data = safe_get_json(url)
+
+    results = []
+    for f in (data.get("data") or [])[:LIMIT_PER_API]:
+        participants = f.get("participants") or []
+        scores = f.get("scores") or []
+
+        home = next((p.get("name") for p in participants if (p.get("meta") or {}).get("location") == "home"), "Home")
+        away = next((p.get("name") for p in participants if (p.get("meta") or {}).get("location") == "away"), "Away")
+
+        home_goals = next(
+            ((s.get("score") or {}).get("goals") for s in scores
+             if s.get("description") == "CURRENT" and (s.get("score") or {}).get("participant") == "home"),
+            0
+        )
+        away_goals = next(
+            ((s.get("score") or {}).get("goals") for s in scores
+             if s.get("description") == "CURRENT" and (s.get("score") or {}).get("participant") == "away"),
+            0
+        )
+
+        results.append({
+            "source": "Sportmonks",
+            "date": today,
+            "match": f"{home} vs {away}",
+            "exactScore": f"{home_goals if home_goals is not None else 0} - {away_goals if away_goals is not None else 0}",
+            "status": str(f.get("state_id", "LIVE"))
+        })
+    return results
+
+
+# 4. GOAL API
+def fetch_goal_api(today):
+    key = os.getenv("GOAL_API_KEY")
+    if not key:
+        raise ValueError("GOAL_API_KEY not set")
+
+    url = f"https://goal-api.com{today}"
+    data = safe_get_json(url, headers={"Authorization": f"Bearer {key}"})
+
+    matches = data if isinstance(data, list) else (data.get("data") or data.get("matches") or [])
+    results = []
+    for m in matches[:LIMIT_PER_API]:
+        home = m.get("home_team") or m.get("homeTeam") or "Home"
+        away = m.get("away_team") or m.get("awayTeam") or "Away"
+        hs = m.get("home_score") if m.get("home_score") is not None else 0
+        aws = m.get("away_score") if m.get("away_score") is not None else 0
+        results.append({
+            "source": "GOAL-API",
+            "date": today,
+            "match": f"{home} vs {away}",
+            "exactScore": f"{hs} - {aws}",
+            "status": m.get("status", "SCHEDULED")
+        })
+    return results
+
+
+def main():
+    today = get_today_date()
+    fetchers = [
+        ("API-Football", fetch_api_football),
+        ("Football-Data", fetch_football_data),
+        ("Sportmonks", fetch_sportmonks),
+        ("GOAL-API", fetch_goal_api),
     ]
 
-    high_score_candidates = [
-        {"score": s, "probability": f"{round(p * 100, 1)}%"}
-        for p, s, total_goals in ft_matrix
-        if total_goals >= 3
-    ][:5]
+    all_scores = []
+    for name, fn in fetchers:
+        try:
+            items = fn(today)
+            print(f"[OK] {name}: fetched {len(items)} matches")
+            all_scores.extend(items)
+        except Exception as e:
+            print(f"[Skipped] {name}: {e}")
 
-    all_ht_scores = [
-        {"score": s, "probability": f"{round(p * 100, 1)}%"}
-        for p, s in ht_matrix[:6]
-    ]
-    all_ft_scores = [
-        {"score": s, "probability": f"{round(p * 100, 1)}%"}
-        for p, s, _ in ft_matrix[:8]
-    ]
-
-    return {
-        "ht_score": best_ht,
-        "ht_probability": f"{best_ht_prob}%",
-        "ft_score": best_ft,
-        "ft_probability": f"{best_ft_prob}%",
-        "ht_ft_combo": f"{best_ht} / {best_ft}",
-        "premium_exact_scores": premium_exact_scores,
-        "high_scores": high_score_candidates,
-        "all_ht_scores": all_ht_scores,
-        "all_ft_scores": all_ft_scores
+    output = {
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "date": today,
+        "count": len(all_scores),
+        "matches": all_scores
     }
 
-url = f"{BASE_URL}/matches?dateFrom={date_from}&dateTo={date_to}"
-response = requests.get(url, headers=HEADERS, timeout=30)
-response.raise_for_status()
-data = response.json()
+    with open("scores.json", "w", encoding="utf-8") as f:
+        json.dump(output, f, indent=2, ensure_ascii=False)
 
-predictions_list = []
-standings_cache = {}
-matches = data.get("matches", [])
+    print(f"Saved {len(all_scores)} total exact scores to scores.json")
 
-for m in matches:
-    if m.get("status") in ["SCHEDULED", "TIMED"]:
-        comp_code = m.get("competition", {}).get("code")
-        comp_stats = get_team_stats(comp_code, standings_cache)
-        home_id = m["homeTeam"]["id"]
-        away_id = m["awayTeam"]["id"]
-        scores = predict_scores(home_id, away_id, comp_stats)
 
-        predictions_list.append({
-            "fixture_id": m["id"],
-            "kickoff_utc": m["utcDate"],
-            "league": m["competition"]["name"],
-            "country": m["area"]["name"],
-            "home_team": m["homeTeam"]["name"],
-            "away_team": m["awayTeam"]["name"],
-            "ht_score": scores["ht_score"],
-            "ht_probability": scores["ht_probability"],
-            "ft_score": scores["ft_score"],
-            "ft_probability": scores["ft_probability"],
-            "ht_ft_combo": scores["ht_ft_combo"],
-            "premium_exact_scores": scores["premium_exact_scores"],
-            "high_scores": scores["high_scores"],
-            "all_ht_scores": scores["all_ht_scores"],
-            "all_ft_scores": scores["all_ft_scores"]
-        })
-
-output = {
-    "updated_at": now_utc.isoformat(),
-    "date_range": f"{date_from} to {date_to}",
-    "total_predictions": len(predictions_list),
-    "api_message": "OK" if "matches" in data else data.get("message", "Error"),
-    "predictions": predictions_list
-}
-
-with open("scores.json", "w", encoding="utf-8") as f:
-    json.dump(output, f, indent=2, ensure_ascii=False)
-
-print(f"Saved {len(predictions_list)} predictions to scores.json!")
+if __name__ == "__main__":
+    main()
