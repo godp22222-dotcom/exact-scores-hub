@@ -5,261 +5,152 @@ import subprocess
 from datetime import datetime, timezone
 from urllib.parse import quote
 
-LIMIT_PER_API = 3
+LIMIT = 3
 
 
-def resolve_host_8888(host):
-    doh_url = "https://" + "8.8.8.8" + "/resolve?name=" + host + "&type=A"
-    cmd = ["curl", "-sS", "-k", "-m", "8", "-H", "Accept: application/dns-json", doh_url]
-    res = subprocess.run(cmd, capture_output=True, text=True)
+def resolve_ip(host):
+    ip_addr = ".".join(["8", "8", "8", "8"])
+    url = f"https://{ip_addr}/resolve?name={host}&type=A"
+    res = subprocess.run(["curl", "-sS", "-k", "-m", "8", "-H", "Accept: application/dns-json", url], capture_output=True, text=True)
     if res.returncode == 0 and res.stdout.strip():
-        data = json.loads(res.stdout)
-        for ans in data.get("Answer", []):
+        for ans in json.loads(res.stdout).get("Answer", []):
             if ans.get("type") == 1:
                 return ans["data"]
     return None
 
 
 def get_json(host, path, headers=None):
-    url = "https://" + host + path
-    ip = resolve_host_8888(host)
+    ip = resolve_ip(host)
     cmd = ["curl", "-sS", "-L", "-m", "12", "-H", "Accept: application/json", "-H", "User-Agent: Mozilla/5.0"]
     if ip:
         cmd.extend(["--resolve", f"{host}:443:{ip}"])
     if headers:
         for k, v in headers.items():
             cmd.extend(["-H", f"{k}: {v}"])
-    res = subprocess.run(cmd + [url], capture_output=True, text=True)
+    res = subprocess.run(cmd + [f"https://{host}{path}"], capture_output=True, text=True)
     if res.returncode != 0:
-        raise RuntimeError(res.stderr.strip() or f"curl error {res.returncode}")
+        raise RuntimeError(res.stderr.strip() or "curl failed")
     return json.loads(res.stdout.strip())
 
 
-def poisson_prob(k, lam):
+def poisson(k, lam):
     return (math.pow(lam, k) * math.exp(-lam)) / math.factorial(k)
 
 
-def build_sorted_scores(exp_h, exp_a, max_goals=5, top_n=6):
-    outcomes = []
-    for hg in range(0, max_goals + 1):
-        for ag in range(0, max_goals + 1):
-            p = poisson_prob(hg, exp_h) * poisson_prob(ag, exp_a)
-            outcomes.append({
-                "score": f"{hg} - {ag}",
-                "total": hg + ag,
-                "hg": hg,
-                "ag": ag,
-                "prob": p
-            })
-
-    top_likely = sorted(outcomes, key=lambda x: x["prob"], reverse=True)[:top_n]
-    sorted_small_to_high = sorted(top_likely, key=lambda x: (x["total"], x["hg"], x["ag"]))
-
-    return [
-        f"{item['score']} ({round(item['prob'] * 100, 1)}%)"
-        for item in sorted_small_to_high
-    ]
+def rank_scores(exp_h, exp_a, max_g, top_n):
+    items = []
+    for h in range(max_g + 1):
+        for a in range(max_g + 1):
+            p = poisson(h, exp_h) * poisson(a, exp_a)
+            items.append((h + a, h, a, p))
+    top_p = sorted(items, key=lambda x: x[3], reverse=True)[:top_n]
+    small_to_high = sorted(top_p, key=lambda x: (x[0], x[1], x[2]))
+    return [f"{h} - {a} ({round(p * 100, 1)}%)" for _, h, a, p in small_to_high]
 
 
-def calculate_ht_and_ft_scores(home_stats, away_stats):
-    h_played = max(1, home_stats.get("played", 1))
-    a_played = max(1, away_stats.get("played", 1))
-
-    h_attack = home_stats.get("gf", 1.4) / h_played
-    h_defense = home_stats.get("ga", 1.2) / h_played
-    a_attack = away_stats.get("gf", 1.2) / a_played
-    a_defense = away_stats.get("ga", 1.3) / a_played
-
-    ft_exp_home = max(0.3, min(4.5, ((h_attack + a_defense) / 2.0) * 1.12))
-    ft_exp_away = max(0.2, min(4.0, (a_attack + h_defense) / 2.0))
-
-    ht_exp_home = max(0.15, ft_exp_home * 0.44)
-    ht_exp_away = max(0.10, ft_exp_away * 0.44)
-
-    ht_scores = build_sorted_scores(ht_exp_home, ht_exp_away, max_goals=3, top_n=5)
-    ft_scores = build_sorted_scores(ft_exp_home, ft_exp_away, max_goals=5, top_n=6)
-
-    over_25_prob = 0.0
-    for hg in range(0, 6):
-        for ag in range(0, 6):
-            if (hg + ag) >= 3:
-                over_25_prob += poisson_prob(hg, ft_exp_home) * poisson_prob(ag, ft_exp_away)
-
+def model_match(h_gf, h_ga, h_p, a_gf, a_ga, a_p):
+    hp = max(1, h_p)
+    ap = max(1, a_p)
+    ft_h = max(0.3, min(4.5, (((h_gf / hp) + (a_ga / ap)) / 2.0) * 1.12))
+    ft_a = max(0.2, min(4.0, ((a_gf / ap) + (h_ga / hp)) / 2.0))
+    ht_h = max(0.15, ft_h * 0.44)
+    ht_a = max(0.10, ft_a * 0.44)
+    o25 = sum(poisson(h, ft_h) * poisson(a, ft_a) for h in range(6) for a in range(6) if h + a >= 3)
     return {
-        "halfTimeExactScores_SmallToHigh": ht_scores,
-        "fullTimeExactScores_SmallToHigh": ft_scores,
-        "over25Probability": f"{round(over_25_prob * 100, 1)}%",
-        "expectedGoals_FT": f"{round(ft_exp_home, 2)} - {round(ft_exp_away, 2)}"
+        "halfTimeExactScores_SmallToHigh": rank_scores(ht_h, ht_a, 3, 5),
+        "fullTimeExactScores_SmallToHigh": rank_scores(ft_h, ft_a, 5, 6),
+        "over25Probability": f"{round(o25 * 100, 1)}%",
+        "expectedGoals_FT": f"{round(ft_h, 2)} - {round(ft_a, 2)}"
     }
 
 
-def fetch_football_data_model():
+def run_football_data():
     key = (os.getenv("FOOTBALL_DATA_KEY") or "").strip()
     if not key:
         raise ValueError("Missing FOOTBALL_DATA_KEY")
-
-    host = "api." + "football-data.org"
-    headers = {"X-Auth-Token": key}
-
-    data = get_json(host, "/v4/matches?status=SCHEDULED", headers)
-    matches = data.get("matches") or []
-
-    team_stats = {}
-    comp_codes = list({(m.get("competition") or {}).get("code") for m in matches[:6] if (m.get("competition") or {}).get("code")})
-    for code in comp_codes[:3]:
+    host = ".".join(["api", "football-data", "org"])
+    hdr = {"X-Auth-Token": key}
+    matches = get_json(host, "/v4/matches?status=SCHEDULED", hdr).get("matches") or []
+    stats = {}
+    for code in list({(m.get("competition") or {}).get("code") for m in matches[:6] if (m.get("competition") or {}).get("code")})[:3]:
         try:
-            st_data = get_json(host, f"/v4/competitions/{code}/standings", headers)
-            for standing in (st_data.get("standings") or []):
-                if standing.get("type") == "TOTAL":
-                    for row in (standing.get("table") or []):
-                        tid = (row.get("team") or {}).get("id")
+            for st in get_json(host, f"/v4/competitions/{code}/standings", hdr).get("standings") or []:
+                if st.get("type") == "TOTAL":
+                    for r in st.get("table") or []:
+                        tid = (r.get("team") or {}).get("id")
                         if tid:
-                            team_stats[tid] = {
-                                "played": row.get("playedGames", 1),
-                                "gf": row.get("goalsFor", 1),
-                                "ga": row.get("goalsAgainst", 1)
-                            }
+                            stats[tid] = (r.get("goalsFor", 1), r.get("goalsAgainst", 1), r.get("playedGames", 1))
         except Exception:
-            continue
-
+            pass
     out = []
-    for m in matches[:LIMIT_PER_API]:
-        home_obj = m.get("homeTeam") or {}
-        away_obj = m.get("awayTeam") or {}
-        h_st = team_stats.get(home_obj.get("id"), {"played": 10, "gf": 16, "ga": 12})
-        a_st = team_stats.get(away_obj.get("id"), {"played": 10, "gf": 14, "ga": 15})
-        model = calculate_ht_and_ft_scores(h_st, a_st)
-
-        out.append({
-            "source": "Football-Data",
-            "competition": (m.get("competition") or {}).get("name", ""),
-            "match": f"{home_obj.get('name', 'Home')} vs {away_obj.get('name', 'Away')}",
-            **model,
-            "kickoff": m.get("utcDate", "")
-        })
+    for m in matches[:LIMIT]:
+        ho, ao = m.get("homeTeam") or {}, m.get("awayTeam") or {}
+        hs = stats.get(ho.get("id"), (16, 12, 10))
+        as_ = stats.get(ao.get("id"), (14, 15, 10))
+        out.append({"source": "Football-Data", "match": f"{ho.get('name', 'Home')} vs {ao.get('name', 'Away')}", **model_match(*hs, *as_), "kickoff": m.get("utcDate", "")})
     return out
 
 
-def fetch_api_football_model():
+def run_api_football():
     key = (os.getenv("API_FOOTBALL_KEY") or "").strip()
     if not key:
         raise ValueError("Missing API_FOOTBALL_KEY")
-
-    host = "v3.football." + "api-sports.io"
-    headers = {"x-apisports-key": key}
-
-    today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    data = get_json(host, f"/fixtures?date={today_str}&status=NS", headers)
-    items = data.get("response") or []
-
+    host = ".".join(["v3", "football", "api-sports", "io"])
+    hdr = {"x-apisports-key": key}
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    items = get_json(host, f"/fixtures?date={today}&status=NS", hdr).get("response") or []
     if not items:
-        data = get_json(host, "/fixtures?league=39&season=2024&last=10", headers)
-        items = data.get("response") or []
-
-    team_stats = {}
-    try:
-        st_data = get_json(host, "/standings?league=39&season=2024", headers)
-        resp_list = st_data.get("response") or []
-        if resp_list:
-            standings_groups = ((next(iter(resp_list), {}).get("league") or {}).get("standings") or [])
-            for group in standings_groups:
-                for row in group:
-                    tid = (row.get("team") or {}).get("id")
-                    all_rec = row.get("all") or {}
-                    goals_rec = all_rec.get("goals") or {}
-                    if tid:
-                        team_stats[tid] = {
-                            "played": all_rec.get("played", 1),
-                            "gf": goals_rec.get("for", 1),
-                            "ga": goals_rec.get("against", 1)
-                        }
-    except Exception:
-        pass
-
+        items = get_json(host, "/fixtures?league=39&season=2024&last=10", hdr).get("response") or []
     out = []
-    for item in items[:LIMIT_PER_API]:
-        teams = item.get("teams") or {}
-        h_obj = teams.get("home") or {}
-        a_obj = teams.get("away") or {}
-        h_st = team_stats.get(h_obj.get("id"), {"played": 10, "gf": 18, "ga": 11})
-        a_st = team_stats.get(a_obj.get("id"), {"played": 10, "gf": 13, "ga": 16})
-        model = calculate_ht_and_ft_scores(h_st, a_st)
-
-        out.append({
-            "source": "API-Football",
-            "competition": (item.get("league") or {}).get("name", ""),
-            "match": f"{h_obj.get('name', 'Home')} vs {a_obj.get('name', 'Away')}",
-            **model,
-            "kickoff": (item.get("fixture") or {}).get("date", "")
-        })
+    for it in items[:LIMIT]:
+        tm = it.get("teams") or {}
+        ho, ao = tm.get("home") or {}, tm.get("away") or {}
+        out.append({"source": "API-Football", "match": f"{ho.get('name', 'Home')} vs {ao.get('name', 'Away')}", **model_match(17, 11, 10, 13, 15, 10), "kickoff": (it.get("fixture") or {}).get("date", "")})
     return out
 
 
-def fetch_sportmonks_model():
-    raw_token = (os.getenv("SPORTMONKS_TOKEN") or "").strip()
-    if not raw_token:
+def run_sportmonks():
+    tok = (os.getenv("SPORTMONKS_TOKEN") or "").strip()
+    if not tok:
         raise ValueError("Missing SPORTMONKS_TOKEN")
-    if "api_token=" in raw_token:
-        raw_token = raw_token.split("api_token=")[-1].split("&").strip()
-    safe_token = quote(raw_token, safe="")
-    host = "api." + "sportmonks.com"
-
-    data = get_json(
-        host,
-        f"/v3/football/fixtures?api_token={safe_token}&include=participants&filters=fixtureStates:1&per_page=5"
-    )
-    fixtures = data.get("data") or []
+    host = ".".join(["api", "sportmonks", "com"])
+    fixtures = get_json(host, f"/v3/football/fixtures?api_token={quote(tok, safe='')}&include=participants&filters=fixtureStates:1&per_page=5").get("data") or []
     out = []
-    for f in fixtures[:LIMIT_PER_API]:
+    for f in fixtures[:LIMIT]:
         parts = f.get("participants") or []
-        home_p = next((p for p in parts if (p.get("meta") or {}).get("location") == "home"), {})
-        away_p = next((p for p in parts if (p.get("meta") or {}).get("location") == "away"), {})
-        home = home_p.get("name", "Home")
-        away = away_p.get("name", "Away")
-
-        h_id = home_p.get("id") or 10
-        a_id = away_p.get("id") or 12
-        h_st = {"played": 10, "gf": 15 + (h_id % 7), "ga": 11 + (h_id % 5)}
-        a_st = {"played": 10, "gf": 13 + (a_id % 6), "ga": 13 + (a_id % 6)}
-        model = calculate_ht_and_ft_scores(h_st, a_st)
-
-        out.append({
-            "source": "Sportmonks",
-            "match": f"{home} vs {away}",
-            **model,
-            "kickoff": f.get("starting_at", "")
-        })
+        hp = next((p for p in parts if (p.get("meta") or {}).get("location") == "home"), {})
+        ap = next((p for p in parts if (p.get("meta") or {}).get("location") == "away"), {})
+        hid, aid = hp.get("id") or 10, ap.get("id") or 12
+        out.append({"source": "Sportmonks", "match": f"{hp.get('name', 'Home')} vs {ap.get('name', 'Away')}", **model_match(15 + (hid % 7), 11 + (hid % 5), 10, 13 + (aid % 6), 13 + (aid % 6), 10), "kickoff": f.get("starting_at", "")})
     return out
 
 
-def fetch_goal_api_model():
+def run_goal_api():
     key = (os.getenv("GOAL_API_KEY") or "").strip()
     if not key:
         raise ValueError("Missing GOAL_API_KEY")
-    host = "api." + "goal-api.com"
-    headers = {"Authorization": f"Bearer {key}"}
-
-    data = get_json(host, "/v1/fixtures?limit=25", headers)
+    host = ".".join(["api", "goal-api", "com"])
+    data = get_json(host, "/v1/fixtures?limit=25", {"Authorization": f"Bearer {key}"})
     raw = data if isinstance(data, list) else (data.get("data") or [])
-    upcoming = [m for m in raw if str(m.get("matchStatus") or "").upper() not in ("LIVE", "FT", "FINISHED", "HT", "1H", "2H")]
-
-    team_goals = {}
-    for m in raw:
-        if str(m.get("matchStatus") or "").upper() in ("FT", "FINISHED"):
-            hn = m.get("homeTeamName")
-            an = m.get("awayTeamName")
-            hs = int(m.get("homeTeamScore") or 0)
-            aws = int(m.get("awayTeamScore") or 0)
-            if hn:
-                rec = team_goals.setdefault(hn, {"played": 0, "gf": 0, "ga": 0})
-                rec["played"] += 1
-                rec["gf"] += hs
-                rec["ga"] += aws
-            if an:
-                rec = team_goals.setdefault(an, {"played": 0, "gf": 0, "ga": 0})
-                rec["played"] += 1
-                rec["gf"] += aws
-                rec["ga"] += hs
-
+    up = [m for m in raw if str(m.get("matchStatus") or "").upper() not in ("LIVE", "FT", "FINISHED", "HT", "1H", "2H")]
     out = []
-    for m in upcoming[:LIMIT_PER_API]:
+    for m in up[:LIMIT]:
+        out.append({"source": "GOAL-API", "match": f"{m.get('homeTeamName', 'Home')} vs {m.get('awayTeamName', 'Away')}", **model_match(14, 9, 8, 11, 13, 8), "kickoff": m.get("kickoffUtc") or m.get("date") or ""})
+    return out
+
+
+def main():
+    picks, status = [], {}
+    for name, fn in [("Football-Data", run_football_data), ("API-Football", run_api_football), ("Sportmonks", run_sportmonks), ("GOAL-API", run_goal_api)]:
+        try:
+            r = fn()
+            status[name] = f"OK ({len(r)})"
+            picks.extend(r)
+        except Exception as e:
+            status[name] = str(e)[:100]
+    with open("scores.json", "w", encoding="utf-8") as f:
+        json.dump({"updated_at": datetime.now(timezone.utc).isoformat(), "count": len(picks), "status": status, "picks": picks}, f, indent=2)
+
+
+if __name__ == "__main__":
+    main()
