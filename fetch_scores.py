@@ -1,42 +1,51 @@
 import os
 import json
+import subprocess
 from datetime import datetime, timezone
-import urllib.request
-import urllib.error
 
 LIMIT_PER_API = 3  # Gets 2–3 exact scores from each API
-TIMEOUT_SEC = 12
 
 
-def safe_get_json(url, headers=None):
-    req_headers = {
-        "User-Agent": "Mozilla/5.0 (compatible; ExactScoresHub/1.0)",
-        "Accept": "application/json"
-    }
+def curl_get_json(url, headers=None):
+    """Fetches JSON using curl, automatically falling back to Google DNS-over-HTTPS if runner DNS fails."""
+    base_cmd = ["curl", "-sS", "-L", "-m", "12", "-H", "Accept: application/json"]
     if headers:
-        req_headers.update(headers)
+        for k, v in headers.items():
+            base_cmd.extend(["-H", f"{k}: {v}"])
 
-    req = urllib.request.Request(url, headers=req_headers)
+    # 1. Try normal request
+    res = subprocess.run(base_cmd + [url], capture_output=True, text=True)
+
+    # 2. If DNS failed (curl exit code 6), retry using Google DNS-over-HTTPS
+    if res.returncode == 6:
+        doh_cmd = base_cmd + ["--doh-url", "https://dns.google", url]
+        res = subprocess.run(doh_cmd, capture_output=True, text=True)
+
+    if res.returncode != 0:
+        raise RuntimeError(res.stderr.strip() or f"curl exit {res.returncode}")
+
+    body = res.stdout.strip()
+    if not body:
+        raise RuntimeError("Empty response from API")
+
     try:
-        with urllib.request.urlopen(req, timeout=TIMEOUT_SEC) as response:
-            return json.loads(response.read().decode("utf-8"))
-    except urllib.error.HTTPError as e:
-        body = e.read().decode("utf-8", errors="ignore")[:120]
-        raise RuntimeError(f"HTTP {e.code}: {body}")
+        return json.loads(body)
+    except json.JSONDecodeError:
+        raise RuntimeError(f"Non-JSON response: {body[:100]}")
 
 
-# 1. API-FOOTBALL (No date filter: tries live matches, falls back to Premier League latest)
+# 1. API-FOOTBALL
 def fetch_api_football():
     key = (os.getenv("API_FOOTBALL_KEY") or "").strip()
     if not key:
-        raise ValueError("API_FOOTBALL_KEY missing")
+        raise ValueError("API_FOOTBALL_KEY secret is empty")
 
     headers = {"x-apisports-key": key}
-    data = safe_get_json("https://api-sports.io", headers=headers)
+    data = curl_get_json("https://api-sports.io", headers=headers)
     items = data.get("response") or []
 
     if not items:
-        data = safe_get_json("https://api-sports.io", headers=headers)
+        data = curl_get_json("https://api-sports.io", headers=headers)
         items = data.get("response") or []
 
     if data.get("errors") and not items:
@@ -56,18 +65,21 @@ def fetch_api_football():
     return results
 
 
-# 2. FOOTBALL-DATA.ORG (No date filter: active matches window)
+# 2. FOOTBALL-DATA.ORG
 def fetch_football_data():
     key = (os.getenv("FOOTBALL_DATA_KEY") or "").strip()
     if not key:
-        raise ValueError("FOOTBALL_DATA_KEY missing")
+        raise ValueError("FOOTBALL_DATA_KEY secret is empty")
 
     headers = {"X-Auth-Token": key}
-    data = safe_get_json("https://football-data.org", headers=headers)
-    matches = data.get("matches") or []
+    data = curl_get_json("https://football-data.org", headers=headers)
 
+    if data.get("message") and not data.get("matches"):
+        raise ValueError(data["message"])
+
+    matches = data.get("matches") or []
     if not matches:
-        data = safe_get_json("https://football-data.org", headers=headers)
+        data = curl_get_json("https://football-data.org", headers=headers)
         matches = data.get("matches") or []
 
     results = []
@@ -84,19 +96,21 @@ def fetch_football_data():
     return results
 
 
-# 3. SPORTMONKS (No date filter: livescores inplay, falls back to general fixtures)
+# 3. SPORTMONKS
 def fetch_sportmonks():
     token = (os.getenv("SPORTMONKS_TOKEN") or "").strip()
     if not token:
-        raise ValueError("SPORTMONKS_TOKEN missing")
+        raise ValueError("SPORTMONKS_TOKEN secret is empty")
 
-    data = safe_get_json(
+    data = curl_get_json(
         f"https://sportmonks.com{token}&include=scores;participants"
     )
-    fixtures = data.get("data") or []
+    if data.get("message") and not data.get("data"):
+        raise ValueError(data["message"])
 
+    fixtures = data.get("data") or []
     if not fixtures:
-        data = safe_get_json(
+        data = curl_get_json(
             f"https://sportmonks.com{token}&include=scores;participants&per_page={LIMIT_PER_API}"
         )
         fixtures = data.get("data") or []
@@ -129,22 +143,26 @@ def fetch_sportmonks():
     return results
 
 
-# 4. GOAL API (No date filter: live fixtures, falls back to general fixtures)
+# 4. GOAL API
 def fetch_goal_api():
     key = (os.getenv("GOAL_API_KEY") or "").strip()
     if not key:
-        raise ValueError("GOAL_API_KEY missing")
+        raise ValueError("GOAL_API_KEY secret is empty")
 
-    headers = {"Authorization": f"Bearer {key}"}
+    headers = {"Authorization": f"Bearer {key}", "X-API-Key": key}
     matches = []
     last_err = None
 
     for url in [
-        f"https://goal-api.com{LIMIT_PER_API}",
-        f"https://goal-api.com{LIMIT_PER_API}"
+        "https://api.goal-api.com/v1/fixtures/live",
+        "https://api.goal-api.com/v1/matches",
+        "https://goal-api.com"
     ]:
         try:
-            data = safe_get_json(url, headers=headers)
+            data = curl_get_json(url, headers=headers)
+            if isinstance(data, dict) and data.get("error"):
+                last_err = RuntimeError(str(data["error"]))
+                continue
             matches = data if isinstance(data, list) else (data.get("data") or [])
             if matches:
                 break
@@ -178,17 +196,22 @@ def main():
     ]
 
     all_scores = []
+    api_status = {}
+
     for name, fn in fetchers:
         try:
             items = fn()
+            api_status[name] = f"OK ({len(items)} matches)"
             print(f"[OK] {name}: fetched {len(items)} matches")
             all_scores.extend(items)
         except Exception as e:
+            api_status[name] = f"Skipped: {e}"
             print(f"[Skipped] {name}: {e}")
 
     output = {
         "updated_at": datetime.now(timezone.utc).isoformat(),
         "count": len(all_scores),
+        "api_status": api_status,
         "matches": all_scores
     }
 
