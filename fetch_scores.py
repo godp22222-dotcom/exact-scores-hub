@@ -99,7 +99,7 @@ def predict_scores(home_id, away_id, comp_stats):
         "all_ft_scores": all_ft_scores
     }
 
-url = f"{BASE_URL}/matches?dateFrom={date_from}&dateTo={date_to}"
+url = f"{api.football-data.org/v4}/matches?dateFrom={date_from}&dateTo={date_to}"
 response = requests.get(url, headers=HEADERS, timeout=30)
 response.raise_for_status()
 data = response.json()
