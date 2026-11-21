@@ -57,20 +57,20 @@ def predict_scores(home_id, away_id, comp_stats):
     for h in range(6):
         for a in range(6):
             prob = poisson_prob(h, exp_home_ft) * poisson_prob(a, exp_away_ft)
-            ft_matrix.append((f"{h}:{a}", prob, h + a))
+            ft_matrix.append((prob, f"{h}:{a}", h + a))
 
-    ft_matrix.sort(key=lambda item: item[1], reverse=True)
-    best_ft, raw_ft_prob, _ = next(iter(ft_matrix))
+    ft_matrix.sort(reverse=True)
+    raw_ft_prob, best_ft, _ = next(iter(ft_matrix))
     best_ft_prob = round(raw_ft_prob * 100, 1)
 
     ht_matrix = []
     for h in range(5):
         for a in range(5):
             prob = poisson_prob(h, exp_home_ht) * poisson_prob(a, exp_away_ht)
-            ht_matrix.append((f"{h}:{a}", prob))
+            ht_matrix.append((prob, f"{h}:{a}"))
 
-    ht_matrix.sort(key=lambda item: item[1], reverse=True)
-    best_ht, raw_ht_prob = next(iter(ht_matrix))
+    ht_matrix.sort(reverse=True)
+    raw_ht_prob, best_ht = next(iter(ht_matrix))
     best_ht_prob = round(raw_ht_prob * 100, 1)
 
     premium_exact_scores = [
@@ -79,22 +79,22 @@ def predict_scores(home_id, away_id, comp_stats):
             "score": s,
             "probability": f"{round(p * 100, 1)}%"
         }
-        for idx, (s, p, _) in enumerate(ft_matrix[:3], start=1)
+        for idx, (p, s, _) in enumerate(ft_matrix[:3], start=1)
     ]
 
     high_score_candidates = [
         {"score": s, "probability": f"{round(p * 100, 1)}%"}
-        for s, p, total_goals in ft_matrix
+        for p, s, total_goals in ft_matrix
         if total_goals >= 3
     ][:5]
 
     all_ht_scores = [
         {"score": s, "probability": f"{round(p * 100, 1)}%"}
-        for s, p in ht_matrix[:6]
+        for p, s in ht_matrix[:6]
     ]
     all_ft_scores = [
         {"score": s, "probability": f"{round(p * 100, 1)}%"}
-        for s, p, _ in ft_matrix[:8]
+        for p, s, _ in ft_matrix[:8]
     ]
 
     return {
@@ -156,4 +156,3 @@ with open("scores.json", "w", encoding="utf-8") as f:
     json.dump(output, f, indent=2, ensure_ascii=False)
 
 print(f"Saved {len(predictions_list)} predictions to scores.json!")
-        
