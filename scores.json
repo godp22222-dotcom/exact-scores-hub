@@ -1,30 +1,11 @@
 {
-  "updated_at": "2026-11-21T14:14:59.753242+00:00",
-  "count": 3,
-  "api_status": {
-    "API-Football": "Skipped: Non-JSON response: <!DOCTYPE html><html lang=\"en-US\"><head><title>Just a moment...</title><meta http-equiv=\"Content-Typ",
-    "Football-Data": "Skipped: curl: (60) SSL: no alternative certificate subject name matches target hostname 'football-data.org'\nMore details here: https://curl.se/docs/sslcerts.html\n\ncurl failed to verify the legitimacy of the server and therefore could not\nestablish a secure connection to it. To learn more about this situation and\nhow to fix it, please visit the webpage mentioned above.",
-    "Sportmonks": "Skipped: curl: (3) URL rejected: Bad hostname",
-    "GOAL-API": "OK (3 matches)"
+  "updated_at": "2026-11-21T14:34:32.793296+00:00",
+  "count": 0,
+  "status": {
+    "GOAL-API": "curl: (6) Could not resolve host: goal-api.com",
+    "Football-Data": "curl: (6) Could not resolve host: football-data.org",
+    "API-Football": "curl: (6) Could not resolve host: api-sports.io",
+    "Sportmonks": "curl: (3) URL rejected: Port number was not a decimal number between 0 and 65535"
   },
-  "matches": [
-    {
-      "source": "GOAL-API",
-      "match": "Mold Alexandra vs Porthmadog",
-      "exactScore": "0 - 0",
-      "status": "LIVE"
-    },
-    {
-      "source": "GOAL-API",
-      "match": "Ajka vs Kazincbarcika",
-      "exactScore": "0 - 0",
-      "status": "LIVE"
-    },
-    {
-      "source": "GOAL-API",
-      "match": "Hannover II vs Drochtersen/Assel",
-      "exactScore": "0 - 0",
-      "status": "LIVE"
-    }
-  ]
+  "picks": []
 }
