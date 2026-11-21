@@ -1,42 +1,11 @@
 import os
 import json
-import ssl
-import socket
 from datetime import datetime, timezone
 import urllib.request
 import urllib.error
 
 LIMIT_PER_API = 3  # Gets 2–3 exact scores from each API
 TIMEOUT_SEC = 12
-
-
-# Bypass runner DNS issues using Google DNS-over-HTTPS (8.8.8.8)
-def resolve_ip_via_google_doh(hostname):
-    doh_url = f"https://8.8.8{hostname}&type=A"
-    req = urllib.request.Request(doh_url, headers={"Accept": "application/dns-json"})
-    ctx = ssl.create_default_context()
-    with urllib.request.urlopen(req, timeout=TIMEOUT_SEC, context=ctx) as resp:
-        data = json.loads(resp.read().decode("utf-8"))
-        for ans in data.get("Answer", []):
-            if ans.get("type") == 1:
-                return ans["data"]
-    raise RuntimeError(f"Could not resolve {hostname}")
-
-
-_DNS_CACHE = {}
-_ORIG_CREATE_CONNECTION = socket.create_connection
-
-
-def _doh_create_connection(address, *args, **kwargs):
-    host, port = address
-    if host not in ("8.8.8.8", "1.1.1.1") and not host.replace(".", "").isdigit():
-        if host not in _DNS_CACHE:
-            _DNS_CACHE[host] = resolve_ip_via_google_doh(host)
-        address = (_DNS_CACHE[host], port)
-    return _ORIG_CREATE_CONNECTION(address, *args, **kwargs)
-
-
-socket.create_connection = _doh_create_connection
 
 
 def safe_get_json(url, headers=None):
@@ -66,7 +35,6 @@ def fetch_api_football():
     data = safe_get_json("https://api-sports.io", headers=headers)
     items = data.get("response") or []
 
-    # Fallback if no live games or free-tier restriction: pull general fixtures without date
     if not items:
         data = safe_get_json("https://api-sports.io", headers=headers)
         items = data.get("response") or []
@@ -88,7 +56,7 @@ def fetch_api_football():
     return results
 
 
-# 2. FOOTBALL-DATA.ORG (No date filter: default /v4/matches returns active window automatically)
+# 2. FOOTBALL-DATA.ORG (No date filter: active matches window)
 def fetch_football_data():
     key = (os.getenv("FOOTBALL_DATA_KEY") or "").strip()
     if not key:
@@ -98,7 +66,6 @@ def fetch_football_data():
     data = safe_get_json("https://football-data.org", headers=headers)
     matches = data.get("matches") or []
 
-    # Fallback to Premier League (PL) matches without date filter
     if not matches:
         data = safe_get_json("https://football-data.org", headers=headers)
         matches = data.get("matches") or []
@@ -117,7 +84,7 @@ def fetch_football_data():
     return results
 
 
-# 3. SPORTMONKS (No date filter: tries livescores, falls back to general fixtures)
+# 3. SPORTMONKS (No date filter: livescores inplay, falls back to general fixtures)
 def fetch_sportmonks():
     token = (os.getenv("SPORTMONKS_TOKEN") or "").strip()
     if not token:
@@ -128,7 +95,6 @@ def fetch_sportmonks():
     )
     fixtures = data.get("data") or []
 
-    # Fallback to general fixtures without date filter
     if not fixtures:
         data = safe_get_json(
             f"https://sportmonks.com{token}&include=scores;participants&per_page={LIMIT_PER_API}"
@@ -163,7 +129,7 @@ def fetch_sportmonks():
     return results
 
 
-# 4. GOAL API (No date filter: tries live fixtures, falls back to general fixtures)
+# 4. GOAL API (No date filter: live fixtures, falls back to general fixtures)
 def fetch_goal_api():
     key = (os.getenv("GOAL_API_KEY") or "").strip()
     if not key:
