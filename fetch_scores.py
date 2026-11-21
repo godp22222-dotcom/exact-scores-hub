@@ -1,8 +1,11 @@
 import os
 import json
+import ssl
+import socket
 from datetime import datetime, timezone
 import urllib.request
 import urllib.error
+from urllib.parse import urlparse
 
 LIMIT_PER_API = 3
 TIMEOUT_SEC = 12
@@ -10,6 +13,36 @@ TIMEOUT_SEC = 12
 
 def get_today_date():
     return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+
+def resolve_ip_via_google_doh(hostname):
+    """Resolves domain IP directly via Google DNS-over-HTTPS (8.8.8.8) to bypass runner DNS issues."""
+    doh_url = f"https://8.8.8{hostname}&type=A"
+    req = urllib.request.Request(doh_url, headers={"Accept": "application/dns-json"})
+    ctx = ssl.create_default_context()
+    with urllib.request.urlopen(req, timeout=TIMEOUT_SEC, context=ctx) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+        for ans in data.get("Answer", []):
+            if ans.get("type") == 1:  # A record (IPv4)
+                return ans["data"]
+    raise RuntimeError(f"Could not resolve {hostname}")
+
+
+# Cache resolved IPs and route socket connections cleanly with proper SSL SNI
+_DNS_CACHE = {}
+_ORIG_CREATE_CONNECTION = socket.create_connection
+
+
+def _doh_create_connection(address, *args, **kwargs):
+    host, port = address
+    if host not in ("8.8.8.8", "1.1.1.1") and not host.replace(".", "").isdigit():
+        if host not in _DNS_CACHE:
+            _DNS_CACHE[host] = resolve_ip_via_google_doh(host)
+        address = (_DNS_CACHE[host], port)
+    return _ORIG_CREATE_CONNECTION(address, *args, **kwargs)
+
+
+socket.create_connection = _doh_create_connection
 
 
 def safe_get_json(url, headers=None):
@@ -23,7 +56,8 @@ def safe_get_json(url, headers=None):
     req = urllib.request.Request(url, headers=req_headers)
     try:
         with urllib.request.urlopen(req, timeout=TIMEOUT_SEC) as response:
-            return json.loads(response.read().decode("utf-8"))
+            text = response.read().decode("utf-8")
+            return json.loads(text)
     except urllib.error.HTTPError as e:
         body = e.read().decode("utf-8", errors="ignore")[:120]
         raise RuntimeError(f"HTTP {e.code}: {body}")
@@ -118,38 +152,28 @@ def fetch_sportmonks(today):
     return results
 
 
-# 4. GOAL API
+# 4. GOAL API (Official v1/fixtures/date/{date} endpoint)
 def fetch_goal_api(today):
     key = (os.getenv("GOAL_API_KEY") or "").strip()
     if not key:
         raise ValueError("GOAL_API_KEY missing")
 
-    # Tries primary GOAL API host
-    data = None
-    last_err = None
-    for base_url in ["https://goal-api.com", "https://goal-api.com"]:
-        try:
-            data = safe_get_json(f"{base_url}?date={today}", headers={"Authorization": f"Bearer {key}", "X-API-Key": key})
-            break
-        except Exception as e:
-            last_err = e
+    url = f"https://api.goal-api.com/v1/fixtures/date/{today}?limit={LIMIT_PER_API}"
+    data = safe_get_json(url, headers={"Authorization": f"Bearer {key}"})
 
-    if data is None:
-        raise last_err
-
-    matches = data if isinstance(data, list) else (data.get("data") or data.get("matches") or [])
+    matches = data if isinstance(data, list) else (data.get("data") or [])
     results = []
     for m in matches[:LIMIT_PER_API]:
-        home = m.get("home_team") or m.get("homeTeam") or "Home"
-        away = m.get("away_team") or m.get("awayTeam") or "Away"
-        hs = m.get("home_score") if m.get("home_score") is not None else 0
-        aws = m.get("away_score") if m.get("away_score") is not None else 0
+        home = m.get("homeTeamName") or (m.get("homeTeam") or {}).get("name") or "Home"
+        away = m.get("awayTeamName") or (m.get("awayTeam") or {}).get("name") or "Away"
+        hs = m.get("homeTeamScore") if m.get("homeTeamScore") is not None else (m.get("homeScore") if m.get("homeScore") is not None else 0)
+        aws = m.get("awayTeamScore") if m.get("awayTeamScore") is not None else (m.get("awayScore") if m.get("awayScore") is not None else 0)
         results.append({
             "source": "GOAL-API",
             "date": today,
             "match": f"{home} vs {away}",
             "exactScore": f"{hs} - {aws}",
-            "status": m.get("status", "SCHEDULED")
+            "status": m.get("matchStatus") or "SCHEDULED"
         })
     return results
 
