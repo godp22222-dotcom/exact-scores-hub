@@ -4,26 +4,36 @@ from datetime import datetime, timezone
 import urllib.request
 import urllib.error
 
-LIMIT_PER_API = 3  # Gets 2–3 exact scores from each API
-TIMEOUT_SEC = 10   # Prevents hanging if an API is slow
+LIMIT_PER_API = 3
+TIMEOUT_SEC = 12
 
 
 def get_today_date():
-    # Dynamically generates YYYY-MM-DD in UTC every time it runs (never expires)
     return datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
 
 def safe_get_json(url, headers=None):
-    req = urllib.request.Request(url, headers=headers or {"User-Agent": "ExactScoresHub/1.0"})
-    with urllib.request.urlopen(req, timeout=TIMEOUT_SEC) as response:
-        return json.loads(response.read().decode("utf-8"))
+    req_headers = {
+        "User-Agent": "Mozilla/5.0 (compatible; ExactScoresHub/1.0)",
+        "Accept": "application/json"
+    }
+    if headers:
+        req_headers.update(headers)
+
+    req = urllib.request.Request(url, headers=req_headers)
+    try:
+        with urllib.request.urlopen(req, timeout=TIMEOUT_SEC) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="ignore")[:120]
+        raise RuntimeError(f"HTTP {e.code}: {body}")
 
 
 # 1. API-FOOTBALL
 def fetch_api_football(today):
-    key = os.getenv("API_FOOTBALL_KEY")
+    key = (os.getenv("API_FOOTBALL_KEY") or "").strip()
     if not key:
-        raise ValueError("API_FOOTBALL_KEY not set")
+        raise ValueError("API_FOOTBALL_KEY missing")
 
     url = f"https://api-sports.io{today}"
     data = safe_get_json(url, headers={"x-apisports-key": key})
@@ -48,9 +58,9 @@ def fetch_api_football(today):
 
 # 2. FOOTBALL-DATA.ORG
 def fetch_football_data(today):
-    key = os.getenv("FOOTBALL_DATA_KEY")
+    key = (os.getenv("FOOTBALL_DATA_KEY") or "").strip()
     if not key:
-        raise ValueError("FOOTBALL_DATA_KEY not set")
+        raise ValueError("FOOTBALL_DATA_KEY missing")
 
     url = f"https://football-data.org{today}&dateTo={today}"
     data = safe_get_json(url, headers={"X-Auth-Token": key})
@@ -72,9 +82,9 @@ def fetch_football_data(today):
 
 # 3. SPORTMONKS
 def fetch_sportmonks(today):
-    token = os.getenv("SPORTMONKS_TOKEN")
+    token = (os.getenv("SPORTMONKS_TOKEN") or "").strip()
     if not token:
-        raise ValueError("SPORTMONKS_TOKEN not set")
+        raise ValueError("SPORTMONKS_TOKEN missing")
 
     url = f"https://sportmonks.com{today}?api_token={token}&include=scores;participants"
     data = safe_get_json(url)
@@ -110,12 +120,22 @@ def fetch_sportmonks(today):
 
 # 4. GOAL API
 def fetch_goal_api(today):
-    key = os.getenv("GOAL_API_KEY")
+    key = (os.getenv("GOAL_API_KEY") or "").strip()
     if not key:
-        raise ValueError("GOAL_API_KEY not set")
+        raise ValueError("GOAL_API_KEY missing")
 
-    url = f"https://goal-api.com{today}"
-    data = safe_get_json(url, headers={"Authorization": f"Bearer {key}"})
+    # Tries primary GOAL API host
+    data = None
+    last_err = None
+    for base_url in ["https://goal-api.com", "https://goal-api.com"]:
+        try:
+            data = safe_get_json(f"{base_url}?date={today}", headers={"Authorization": f"Bearer {key}", "X-API-Key": key})
+            break
+        except Exception as e:
+            last_err = e
+
+    if data is None:
+        raise last_err
 
     matches = data if isinstance(data, list) else (data.get("data") or data.get("matches") or [])
     results = []
