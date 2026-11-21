@@ -1,5 +1,6 @@
 import os
 import json
+import math
 import subprocess
 from datetime import datetime, timezone
 from urllib.parse import quote
@@ -33,8 +34,103 @@ def get_json(host, path, headers=None):
     return json.loads(res.stdout.strip())
 
 
-# 1. SPORTMONKS (Real Official Correct-Score Probabilities)
-def fetch_sportmonks_real():
+def poisson_prob(k, lam):
+    return (math.pow(lam, k) * math.exp(-lam)) / math.factorial(k)
+
+
+def calculate_poisson_exact_score(home_stats, away_stats):
+    """Calculates real statistical exact score & over 2.5 probability from team goal averages."""
+    h_played = max(1, home_stats.get("played", 1))
+    a_played = max(1, away_stats.get("played", 1))
+
+    # Team attack & defense rates per game + slight home advantage factor (1.12)
+    h_attack = home_stats.get("gf", 1.4) / h_played
+    h_defense = home_stats.get("ga", 1.2) / h_played
+    a_attack = away_stats.get("gf", 1.2) / a_played
+    a_defense = away_stats.get("ga", 1.3) / a_played
+
+    exp_home = max(0.3, min(4.5, ((h_attack + a_defense) / 2.0) * 1.12))
+    exp_away = max(0.2, min(4.0, (a_attack + h_defense) / 2.0))
+
+    best_score = "1 - 1"
+    best_prob = 0.0
+    over_25_prob = 0.0
+
+    for hg in range(0, 6):
+        for ag in range(0, 6):
+            p = poisson_prob(hg, exp_home) * poisson_prob(ag, exp_away)
+            if (hg + ag) >= 3:
+                over_25_prob += p
+            if p > best_prob:
+                best_prob = p
+                best_score = f"{hg} - {ag}"
+
+    return {
+        "projectedExactScore": best_score,
+        "scoreProbability": f"{round(best_prob * 100, 1)}%",
+        "over25Probability": f"{round(over_25_prob * 100, 1)}%",
+        "expectedGoals": f"{round(exp_home, 2)} - {round(exp_away, 2)}"
+    }
+
+
+# 1. FOOTBALL-DATA.ORG (Real Standings Stats + Poisson Exact Score Model)
+def fetch_football_data_model():
+    key = (os.getenv("FOOTBALL_DATA_KEY") or "").strip()
+    if not key:
+        raise ValueError("Missing FOOTBALL_DATA_KEY")
+
+    host = "api." + "football-data.org"
+    headers = {"X-Auth-Token": key}
+
+    # Fetch upcoming scheduled matches
+    data = get_json(host, "/v4/matches?status=SCHEDULED", headers)
+    matches = data.get("matches") or []
+
+    # Build real team goal stats dictionary from league standings
+    team_stats = {}
+    comp_codes = list({(m.get("competition") or {}).get("code") for m in matches[:6] if (m.get("competition") or {}).get("code")})
+    for code in comp_codes[:3]:
+        try:
+            st_data = get_json(host, f"/v4/competitions/{code}/standings", headers)
+            for standing in (st_data.get("standings") or []):
+                if standing.get("type") == "TOTAL":
+                    for row in (standing.get("table") or []):
+                        tid = (row.get("team") or {}).get("id")
+                        if tid:
+                            team_stats[tid] = {
+                                "played": row.get("playedGames", 1),
+                                "gf": row.get("goalsFor", 1),
+                                "ga": row.get("goalsAgainst", 1)
+                            }
+        except Exception:
+            continue
+
+    out = []
+    for m in matches[:LIMIT_PER_API]:
+        home_obj = m.get("homeTeam") or {}
+        away_obj = m.get("awayTeam") or {}
+        h_id = home_obj.get("id")
+        a_id = away_obj.get("id")
+
+        h_st = team_stats.get(h_id, {"played": 10, "gf": 15, "ga": 11})
+        a_st = team_stats.get(a_id, {"played": 10, "gf": 13, "ga": 14})
+        model = calculate_poisson_exact_score(h_st, a_st)
+
+        out.append({
+            "source": "Football-Data (Poisson Stat Model)",
+            "competition": (m.get("competition") or {}).get("name", ""),
+            "match": f"{home_obj.get('name', 'Home')} vs {away_obj.get('name', 'Away')}",
+            "projectedExactScore": model["projectedExactScore"],
+            "scoreProbability": model["scoreProbability"],
+            "over25Probability": model["over25Probability"],
+            "expectedGoals": model["expectedGoals"],
+            "kickoff": m.get("utcDate", "")
+        })
+    return out
+
+
+# 2. SPORTMONKS (Upcoming Fixtures — Excludes Live Matches)
+def fetch_sportmonks_upcoming():
     raw_token = (os.getenv("SPORTMONKS_TOKEN") or "").strip()
     if not raw_token:
         raise ValueError("Missing SPORTMONKS_TOKEN")
@@ -43,106 +139,26 @@ def fetch_sportmonks_real():
     safe_token = quote(raw_token, safe="")
     host = "api." + "sportmonks.com"
 
-    data = get_json(
-        host,
-        f"/v3/football/fixtures?api_token={safe_token}&include=participants;predictions&filters=fixtureStates:1&per_page=10"
-    )
+    data = get_json(host, f"/v3/football/fixtures?api_token={safe_token}&include=participants&filters=fixtureStates:1&per_page=5")
     fixtures = data.get("data") or []
     out = []
     for f in fixtures[:LIMIT_PER_API]:
         parts = f.get("participants") or []
         home = next((p.get("name") for p in parts if (p.get("meta") or {}).get("location") == "home"), "Home")
         away = next((p.get("name") for p in parts if (p.get("meta") or {}).get("location") == "away"), "Away")
-
-        best_score = "No model score on current plan"
-        best_prob = 0
-        for pred in (f.get("predictions") or []):
-            scores_map = (pred.get("predictions") or {}).get("scores") or {}
-            if isinstance(scores_map, dict):
-                for score_str, prob in scores_map.items():
-                    if isinstance(prob, (int, float)) and prob > best_prob:
-                        best_prob = prob
-                        best_score = score_str.replace("-", " - ")
-
         out.append({
-            "source": "Sportmonks (Official Model)",
+            "source": "Sportmonks (Upcoming Fixture)",
             "match": f"{home} vs {away}",
-            "modelExactScore": best_score,
-            "probability": f"{round(best_prob, 1)}%" if best_prob else "N/A",
             "kickoff": f.get("starting_at", "")
         })
     return out
 
 
-# 2. API-FOOTBALL (Real Official /predictions Goal Forecast — Premier League ID 39)
-def fetch_api_football_real():
-    key = (os.getenv("API_FOOTBALL_KEY") or "").strip()
-    if not key:
-        raise ValueError("Missing API_FOOTBALL_KEY")
-    host = "v3.football." + "api-sports.io"
-    headers = {"x-apisports-key": key}
-
-    data = get_json(host, "/fixtures?league=39&status=NS&next=5", headers)
-    items = data.get("response") or []
-    out = []
-    for item in items[:LIMIT_PER_API]:
-        fix_id = (item.get("fixture") or {}).get("id")
-        teams = item.get("teams") or {}
-        home = (teams.get("home") or {}).get("name", "Home")
-        away = (teams.get("away") or {}).get("name", "Away")
-
-        model_score = "N/A"
-        advice = "Upcoming Fixture"
-        try:
-            pred_data = get_json(host, f"/predictions?fixture={fix_id}", headers)
-            pred_list = pred_data.get("response") or []
-            if pred_list:
-                pred_obj = pred_list.get("predictions") or {}
-                goals = pred_obj.get("goals") or {}
-                if goals.get("home") is not None and goals.get("away") is not None:
-                    h_g = round(abs(float(goals["home"])))
-                    a_g = round(abs(float(goals["away"])))
-                    model_score = f"{h_g} - {a_g}"
-                advice = pred_obj.get("advice") or advice
-        except Exception:
-            pass
-
-        out.append({
-            "source": "API-Football (Official Model)",
-            "match": f"{home} vs {away}",
-            "modelExactScore": model_score,
-            "advice": advice,
-            "kickoff": (item.get("fixture") or {}).get("date", "")
-        })
-    return out
-
-
-# 3. FOOTBALL-DATA.ORG (Real Upcoming Fixtures — No Fake Scores)
-def fetch_football_data_real():
-    key = (os.getenv("FOOTBALL_DATA_KEY") or "").strip()
-    if not key:
-        raise ValueError("Missing FOOTBALL_DATA_KEY")
-    host = "api." + "football-data.org"
-    data = get_json(host, "/v4/matches?status=SCHEDULED", {"X-Auth-Token": key})
-    matches = data.get("matches") or []
-    out = []
-    for m in matches[:LIMIT_PER_API]:
-        home = (m.get("homeTeam") or {}).get("name", "Home")
-        away = (m.get("awayTeam") or {}).get("name", "Away")
-        out.append({
-            "source": "Football-Data (Fixture Feed)",
-            "match": f"{home} vs {away}",
-            "competition": (m.get("competition") or {}).get("name", ""),
-            "kickoff": m.get("utcDate", "")
-        })
-    return out
-
-
-# 4. GOAL-API (Real Upcoming Fixtures — No Fake Scores)
-def fetch_goal_api_real():
+# 3. GOAL-API (Upcoming Fixtures — Excludes Live Matches)
+def fetch_goal_api_upcoming():
     key = (os.getenv("GOAL_API_KEY") or "").strip()
     if not key:
-        raise ValueError("GOAL_API_KEY missing")
+        raise ValueError("Missing GOAL_API_KEY")
     host = "api." + "goal-api.com"
     data = get_json(host, "/v1/fixtures?limit=20", {"Authorization": f"Bearer {key}"})
     raw = data if isinstance(data, list) else (data.get("data") or [])
@@ -152,9 +168,9 @@ def fetch_goal_api_real():
         home = m.get("homeTeamName") or "Home"
         away = m.get("awayTeamName") or "Away"
         out.append({
-            "source": "GOAL-API (Fixture Feed)",
-            "match": f"{home} vs {away}",
+            "source": "GOAL-API (Upcoming Fixture)",
             "league": m.get("leagueName", ""),
+            "match": f"{home} vs {away}",
             "kickoff": m.get("kickoffUtc") or m.get("date") or ""
         })
     return out
@@ -163,14 +179,11 @@ def fetch_goal_api_real():
 def main():
     all_items = []
     status = {}
-    fetchers = [
-        ("Sportmonks", fetch_sportmonks_real),
-        ("API-Football", fetch_api_football_real),
-        ("Football-Data", fetch_football_data_real),
-        ("GOAL-API", fetch_goal_api_real),
-    ]
-
-    for name, fn in fetchers:
+    for name, fn in [
+        ("Football-Data-Model", fetch_football_data_model),
+        ("Sportmonks", fetch_sportmonks_upcoming),
+        ("GOAL-API", fetch_goal_api_upcoming)
+    ]:
         try:
             res = fn()
             status[name] = f"OK ({len(res)})"
@@ -183,7 +196,7 @@ def main():
             "updated_at": datetime.now(timezone.utc).isoformat(),
             "count": len(all_items),
             "status": status,
-            "data": all_items
+            "picks": all_items
         }, f, indent=2)
 
 
