@@ -1,73 +1,275 @@
 {
-  "updated_at": "2026-11-21T14:57:28.153034+00:00",
-  "count": 9,
+  "updated_at": "2026-11-21T15:20:40.614577+00:00",
+  "count": 12,
   "status": {
-    "Football-Data-Model": "OK (3)",
+    "Football-Data": "OK (3)",
+    "API-Football": "OK (3)",
     "Sportmonks": "OK (3)",
     "GOAL-API": "OK (3)"
   },
   "picks": [
     {
-      "source": "Football-Data (Poisson Stat Model)",
-      "competition": "Championship",
-      "match": "Swansea City AFC vs West Bromwich Albion FC",
-      "projectedExactScore": "1 - 1",
-      "scoreProbability": "12.1%",
-      "over25Probability": "51.2%",
-      "expectedGoals": "1.38 - 1.37",
-      "kickoff": "2026-11-21T15:00:00Z"
+      "source": "Football-Data",
+      "match": "Norwich City FC vs Cardiff City FC",
+      "halfTimeExactScores_SmallToHigh": [
+        "0 - 0 (18.3%)",
+        "0 - 1 (13.3%)",
+        "1 - 0 (17.7%)",
+        "1 - 1 (12.9%)",
+        "2 - 0 (8.6%)"
+      ],
+      "fullTimeExactScores_SmallToHigh": [
+        "1 - 1 (7.7%)",
+        "1 - 2 (6.4%)",
+        "2 - 1 (8.5%)",
+        "2 - 2 (7.0%)",
+        "3 - 1 (6.2%)",
+        "3 - 2 (5.2%)"
+      ],
+      "over25Probability": "70.9%",
+      "expectedGoals_FT": "2.21 - 1.66",
+      "kickoff": "2026-11-21T12:30:00Z"
     },
     {
-      "source": "Football-Data (Poisson Stat Model)",
-      "competition": "Premier League",
-      "match": "AFC Bournemouth vs Nottingham Forest FC",
-      "projectedExactScore": "1 - 1",
-      "scoreProbability": "11.7%",
-      "over25Probability": "51.7%",
-      "expectedGoals": "1.62 - 1.15",
-      "kickoff": "2026-11-21T15:00:00Z"
+      "source": "Football-Data",
+      "match": "Millwall FC vs Queens Park Rangers FC",
+      "halfTimeExactScores_SmallToHigh": [
+        "0 - 0 (25.7%)",
+        "0 - 1 (18.7%)",
+        "1 - 0 (16.2%)",
+        "0 - 2 (6.8%)",
+        "1 - 1 (11.8%)"
+      ],
+      "fullTimeExactScores_SmallToHigh": [
+        "0 - 1 (7.5%)",
+        "1 - 0 (6.5%)",
+        "1 - 1 (10.8%)",
+        "1 - 2 (8.9%)",
+        "2 - 1 (7.7%)",
+        "2 - 2 (6.4%)"
+      ],
+      "over25Probability": "58.6%",
+      "expectedGoals_FT": "1.44 - 1.66",
+      "kickoff": "2026-11-21T12:30:00Z"
     },
     {
-      "source": "Football-Data (Poisson Stat Model)",
-      "competition": "Championship",
-      "match": "Lincoln City FC vs Wrexham AFC",
-      "projectedExactScore": "1 - 1",
-      "scoreProbability": "12.0%",
-      "over25Probability": "51.8%",
-      "expectedGoals": "1.31 - 1.47",
-      "kickoff": "2026-11-21T15:00:00Z"
+      "source": "Football-Data",
+      "match": "Southampton FC vs Derby County FC",
+      "halfTimeExactScores_SmallToHigh": [
+        "0 - 0 (25.4%)",
+        "0 - 1 (10.1%)",
+        "1 - 0 (24.7%)",
+        "1 - 1 (9.8%)",
+        "2 - 0 (12.0%)"
+      ],
+      "fullTimeExactScores_SmallToHigh": [
+        "1 - 0 (9.8%)",
+        "1 - 1 (8.9%)",
+        "2 - 0 (10.8%)",
+        "2 - 1 (9.8%)",
+        "3 - 0 (8.0%)",
+        "3 - 1 (7.2%)"
+      ],
+      "over25Probability": "57.6%",
+      "expectedGoals_FT": "2.21 - 0.91",
+      "kickoff": "2026-11-21T12:30:00Z"
     },
     {
-      "source": "Sportmonks (Upcoming Fixture)",
+      "source": "API-Football",
+      "match": "Brisbane Roar FC W vs Melbourne City W",
+      "halfTimeExactScores_SmallToHigh": [
+        "0 - 0 (26.8%)",
+        "0 - 1 (14.2%)",
+        "1 - 0 (21.1%)",
+        "1 - 1 (11.2%)",
+        "2 - 0 (8.3%)"
+      ],
+      "fullTimeExactScores_SmallToHigh": [
+        "0 - 1 (6.0%)",
+        "1 - 0 (9.0%)",
+        "1 - 1 (10.8%)",
+        "2 - 0 (8.1%)",
+        "1 - 2 (6.5%)",
+        "2 - 1 (9.7%)"
+      ],
+      "over25Probability": "56.3%",
+      "expectedGoals_FT": "1.79 - 1.2",
+      "kickoff": "2026-11-21T05:50:00+00:00"
+    },
+    {
+      "source": "API-Football",
+      "match": "Sydney FC W vs Canberra United W",
+      "halfTimeExactScores_SmallToHigh": [
+        "0 - 0 (26.8%)",
+        "0 - 1 (14.2%)",
+        "1 - 0 (21.1%)",
+        "1 - 1 (11.2%)",
+        "2 - 0 (8.3%)"
+      ],
+      "fullTimeExactScores_SmallToHigh": [
+        "0 - 1 (6.0%)",
+        "1 - 0 (9.0%)",
+        "1 - 1 (10.8%)",
+        "2 - 0 (8.1%)",
+        "1 - 2 (6.5%)",
+        "2 - 1 (9.7%)"
+      ],
+      "over25Probability": "56.3%",
+      "expectedGoals_FT": "1.79 - 1.2",
+      "kickoff": "2026-11-21T06:00:00+00:00"
+    },
+    {
+      "source": "API-Football",
+      "match": "TS Galaxy U23 vs Siwelele U23",
+      "halfTimeExactScores_SmallToHigh": [
+        "0 - 0 (26.8%)",
+        "0 - 1 (14.2%)",
+        "1 - 0 (21.1%)",
+        "1 - 1 (11.2%)",
+        "2 - 0 (8.3%)"
+      ],
+      "fullTimeExactScores_SmallToHigh": [
+        "0 - 1 (6.0%)",
+        "1 - 0 (9.0%)",
+        "1 - 1 (10.8%)",
+        "2 - 0 (8.1%)",
+        "1 - 2 (6.5%)",
+        "2 - 1 (9.7%)"
+      ],
+      "over25Probability": "56.3%",
+      "expectedGoals_FT": "1.79 - 1.2",
+      "kickoff": "2026-11-21T08:00:00+00:00"
+    },
+    {
+      "source": "Sportmonks",
       "match": "Nordsj\u00e6lland vs Viborg FF",
+      "halfTimeExactScores_SmallToHigh": [
+        "0 - 0 (21.5%)",
+        "0 - 1 (15.6%)",
+        "1 - 0 (17.4%)",
+        "1 - 1 (12.7%)",
+        "2 - 0 (7.1%)"
+      ],
+      "fullTimeExactScores_SmallToHigh": [
+        "1 - 0 (5.6%)",
+        "1 - 1 (9.2%)",
+        "1 - 2 (7.6%)",
+        "2 - 1 (8.5%)",
+        "2 - 2 (7.0%)",
+        "3 - 1 (5.3%)"
+      ],
+      "over25Probability": "66.0%",
+      "expectedGoals_FT": "1.85 - 1.65",
       "kickoff": "2027-03-21 00:00:00"
     },
     {
-      "source": "Sportmonks (Upcoming Fixture)",
+      "source": "Sportmonks",
       "match": "Silkeborg IF vs S\u00f8nderjyske Fodbold",
+      "halfTimeExactScores_SmallToHigh": [
+        "0 - 0 (27.5%)",
+        "0 - 1 (15.2%)",
+        "1 - 0 (20.4%)",
+        "1 - 1 (11.2%)",
+        "2 - 0 (7.5%)"
+      ],
+      "fullTimeExactScores_SmallToHigh": [
+        "0 - 1 (6.7%)",
+        "1 - 0 (9.0%)",
+        "1 - 1 (11.2%)",
+        "2 - 0 (7.5%)",
+        "1 - 2 (7.0%)",
+        "2 - 1 (9.4%)"
+      ],
+      "over25Probability": "55.2%",
+      "expectedGoals_FT": "1.68 - 1.25",
       "kickoff": "2027-03-21 00:00:00"
     },
     {
-      "source": "Sportmonks (Upcoming Fixture)",
+      "source": "Sportmonks",
       "match": "Br\u00f8ndby IF vs Horsens",
+      "halfTimeExactScores_SmallToHigh": [
+        "0 - 0 (22.8%)",
+        "0 - 1 (14.0%)",
+        "1 - 0 (19.7%)",
+        "1 - 1 (12.1%)",
+        "2 - 0 (8.5%)"
+      ],
+      "fullTimeExactScores_SmallToHigh": [
+        "1 - 0 (6.8%)",
+        "1 - 1 (9.5%)",
+        "2 - 0 (6.7%)",
+        "1 - 2 (6.7%)",
+        "2 - 1 (9.3%)",
+        "2 - 2 (6.5%)"
+      ],
+      "over25Probability": "63.4%",
+      "expectedGoals_FT": "1.96 - 1.4",
       "kickoff": "2027-03-21 00:00:00"
     },
     {
-      "source": "GOAL-API (Upcoming Fixture)",
-      "league": "UEFA Women's Nations League - League C",
+      "source": "GOAL-API",
       "match": "Slovakia W vs Bulgaria W",
+      "halfTimeExactScores_SmallToHigh": [
+        "0 - 0 (25.1%)",
+        "0 - 1 (13.8%)",
+        "1 - 0 (20.9%)",
+        "1 - 1 (11.5%)",
+        "2 - 0 (8.7%)"
+      ],
+      "fullTimeExactScores_SmallToHigh": [
+        "1 - 0 (8.2%)",
+        "1 - 1 (10.2%)",
+        "2 - 0 (7.7%)",
+        "1 - 2 (6.4%)",
+        "2 - 1 (9.7%)",
+        "3 - 1 (6.1%)"
+      ],
+      "over25Probability": "59.3%",
+      "expectedGoals_FT": "1.89 - 1.25",
       "kickoff": "2027-06-15T15:00:00.000Z"
     },
     {
-      "source": "GOAL-API (Upcoming Fixture)",
-      "league": "UEFA Women's Nations League - League A",
+      "source": "GOAL-API",
       "match": "Spain W vs Switzerland W",
+      "halfTimeExactScores_SmallToHigh": [
+        "0 - 0 (25.1%)",
+        "0 - 1 (13.8%)",
+        "1 - 0 (20.9%)",
+        "1 - 1 (11.5%)",
+        "2 - 0 (8.7%)"
+      ],
+      "fullTimeExactScores_SmallToHigh": [
+        "1 - 0 (8.2%)",
+        "1 - 1 (10.2%)",
+        "2 - 0 (7.7%)",
+        "1 - 2 (6.4%)",
+        "2 - 1 (9.7%)",
+        "3 - 1 (6.1%)"
+      ],
+      "over25Probability": "59.3%",
+      "expectedGoals_FT": "1.89 - 1.25",
       "kickoff": "2027-06-15T15:00:00.000Z"
     },
     {
-      "source": "GOAL-API (Upcoming Fixture)",
-      "league": "UEFA Women's Nations League - League B",
+      "source": "GOAL-API",
       "match": "Slovenia W vs Hungary W",
+      "halfTimeExactScores_SmallToHigh": [
+        "0 - 0 (25.1%)",
+        "0 - 1 (13.8%)",
+        "1 - 0 (20.9%)",
+        "1 - 1 (11.5%)",
+        "2 - 0 (8.7%)"
+      ],
+      "fullTimeExactScores_SmallToHigh": [
+        "1 - 0 (8.2%)",
+        "1 - 1 (10.2%)",
+        "2 - 0 (7.7%)",
+        "1 - 2 (6.4%)",
+        "2 - 1 (9.7%)",
+        "3 - 1 (6.1%)"
+      ],
+      "over25Probability": "59.3%",
+      "expectedGoals_FT": "1.89 - 1.25",
       "kickoff": "2027-06-15T15:00:00.000Z"
     }
   ]
