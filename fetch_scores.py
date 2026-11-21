@@ -6,8 +6,8 @@ import urllib.request
 import urllib.error
 from urllib.parse import quote
 
-LIMIT_PER_API = 3  # 2–3 high-scoring exact score picks per API
-MIN_TOTAL_GOALS = 3  # High-target threshold (3+ total goals, e.g., 2-1, 3-1, 2-2, 3-2)
+LIMIT_PER_API = 3
+MIN_TOTAL_GOALS = 3
 
 
 def urllib_get_json(url, headers=None):
@@ -44,7 +44,7 @@ def curl_get_json(url, headers=None):
     return json.loads(res.stdout.strip())
 
 
-# 1. API-FOOTBALL (High-Target Exact Scores from /predictions)
+# 1. API-FOOTBALL
 def fetch_api_football_high_scores():
     key = (os.getenv("API_FOOTBALL_KEY") or "").strip()
     if not key:
@@ -76,15 +76,12 @@ def fetch_api_football_high_scores():
                 f"https://api-sports.io{fix_id}",
                 headers=headers
             )
-            pred_item = (pred_data.get("response") or [{}]).get("predictions") or {}
+            pred_list = pred_data.get("response") or []
+            pred_item = (pred_list.get("predictions") if pred_list else {}) or {}
             goals_pred = pred_item.get("goals") or {}
-            h_raw = float(goals_pred.get("home") or 0)
-            a_raw = float(goals_pred.get("away") or 0)
+            h_est = max(1, round(abs(float(goals_pred.get("home") or 1))))
+            a_est = max(1, round(abs(float(goals_pred.get("away") or 1))))
 
-            h_est = max(1, round(abs(h_raw)))
-            a_est = max(1, round(abs(a_raw)))
-
-            # Keep only high-scoring projections (3+ total goals)
             if (h_est + a_est) < MIN_TOTAL_GOALS:
                 continue
 
@@ -103,14 +100,13 @@ def fetch_api_football_high_scores():
     return results
 
 
-# 2. FOOTBALL-DATA.ORG (Upcoming Top-League High-Target Fixtures)
+# 2. FOOTBALL-DATA.ORG
 def fetch_football_data_high_scores():
     key = (os.getenv("FOOTBALL_DATA_KEY") or "").strip()
     if not key:
         raise ValueError("FOOTBALL_DATA_KEY secret is empty")
 
     headers = {"X-Auth-Token": key}
-    # Prioritizes high-scoring leagues (Bundesliga BL1, Eredivisie DED, Premier League PL)
     matches = []
     for comp in ["BL1", "DED", "PL"]:
         try:
@@ -130,7 +126,7 @@ def fetch_football_data_high_scores():
         home = (m.get("homeTeam") or {}).get("name", "Home")
         away = (m.get("awayTeam") or {}).get("name", "Away")
         score = high_score_templates[idx % len(high_score_templates)]
-        h_g, a_g = [int(x.strip()) for x in score.split("-")]
+        h_g, a_g = map(int, score.split("-"))
         results.append({
             "source": "Football-Data",
             "match": f"{home} vs {away}",
@@ -143,7 +139,7 @@ def fetch_football_data_high_scores():
     return results
 
 
-# 3. SPORTMONKS (Filters specifically for High-Scoring Exact Score Probabilities: 2-1, 3-1, 2-2, 3-2, 4-1)
+# 3. SPORTMONKS
 def fetch_sportmonks_high_scores():
     raw_token = (os.getenv("SPORTMONKS_TOKEN") or "").strip()
     if not raw_token:
@@ -174,17 +170,16 @@ def fetch_sportmonks_high_scores():
             if isinstance(scores_map, dict):
                 for score_str, prob in scores_map.items():
                     parts = score_str.split("-")
-                    if len(parts) == 2 and parts.isdigit() and parts.isdigit():
-                        total_g = int(parts) + int(parts)
-                        # Only consider high-scoring exact scores (3+ goals)
-                        if total_g >= MIN_TOTAL_GOALS and isinstance(prob, (int, float)) and prob > best_prob:
+                    if len(parts) == 2 and all(p.strip().isdigit() for p in parts):
+                        h_val, a_val = map(int, parts)
+                        if (h_val + a_val) >= MIN_TOTAL_GOALS and isinstance(prob, (int, float)) and prob > best_prob:
                             best_prob = prob
-                            best_high_score = f"{parts} - {parts}"
+                            best_high_score = f"{h_val} - {a_val}"
 
         if not best_high_score:
             best_high_score = "3 - 1"
 
-        h_g, a_g = [int(x.strip()) for x in best_high_score.split("-")]
+        h_g, a_g = map(int, best_high_score.split("-"))
         results.append({
             "source": "Sportmonks",
             "match": f"{home} vs {away}",
@@ -197,7 +192,7 @@ def fetch_sportmonks_high_scores():
     return results
 
 
-# 4. GOAL API (Upcoming Scheduled Fixtures Only — High-Target Selection)
+# 4. GOAL API
 def fetch_goal_api_high_scores():
     key = (os.getenv("GOAL_API_KEY") or "").strip()
     if not key:
@@ -233,7 +228,7 @@ def fetch_goal_api_high_scores():
         home = m.get("homeTeamName") or (m.get("homeTeam") or {}).get("name") or "Home"
         away = m.get("awayTeamName") or (m.get("awayTeam") or {}).get("name") or "Away"
         score = high_targets[idx % len(high_targets)]
-        h_g, a_g = [int(x.strip()) for x in score.split("-")]
+        h_g, a_g = map(int, score.split("-"))
         results.append({
             "source": "GOAL-API",
             "match": f"{home} vs {away}",
@@ -263,3 +258,18 @@ def main():
             api_status[name] = f"OK ({len(items)} high-target picks)"
             print(f"[OK] {name}: fetched {len(items)} high-target picks")
             all_high_scores.extend(items)
+        except Exception as e:
+            api_status[name] = f"Skipped: {e}"
+            print(f"[Skipped] {name}: {e}")
+
+    output = {
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "category": "high_scores / high_targets (3+ goals)",
+        "count": len(all_high_scores),
+        "api_status": api_status,
+        "high_target_scores": all_high_scores
+    }
+
+    with open("scores.json", "w", encoding="utf-8") as f:
+        json.dump(output, f, indent=2, ensure_ascii=False)
+
