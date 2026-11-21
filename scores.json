@@ -1,57 +1,48 @@
 {
-  "updated_at": "2026-11-21T14:44:44.915237+00:00",
-  "count": 9,
+  "updated_at": "2026-11-21T14:52:08.351367+00:00",
+  "count": 6,
   "status": {
-    "GOAL-API": "OK (3)",
-    "Football-Data": "OK (3)",
+    "Sportmonks": "OK (0)",
     "API-Football": "OK (0)",
-    "Sportmonks": "OK (3)"
+    "Football-Data": "OK (3)",
+    "GOAL-API": "OK (3)"
   },
-  "picks": [
+  "data": [
     {
-      "source": "GOAL-API",
-      "match": "Slovakia W vs Bulgaria W",
-      "highTargetScore": "2 - 1"
-    },
-    {
-      "source": "GOAL-API",
-      "match": "Spain W vs Switzerland W",
-      "highTargetScore": "3 - 1"
-    },
-    {
-      "source": "GOAL-API",
-      "match": "Slovenia W vs Hungary W",
-      "highTargetScore": "3 - 2"
-    },
-    {
-      "source": "Football-Data",
+      "source": "Football-Data (Fixture Feed)",
       "match": "Middlesbrough FC vs Bristol City FC",
-      "highTargetScore": "3 - 1"
+      "competition": "Championship",
+      "kickoff": "2026-11-21T15:00:00Z"
     },
     {
-      "source": "Football-Data",
+      "source": "Football-Data (Fixture Feed)",
       "match": "Tottenham Hotspur FC vs Ipswich Town FC",
-      "highTargetScore": "2 - 2"
+      "competition": "Premier League",
+      "kickoff": "2026-11-21T15:00:00Z"
     },
     {
-      "source": "Football-Data",
+      "source": "Football-Data (Fixture Feed)",
       "match": "Chelsea FC vs Leeds United FC",
-      "highTargetScore": "3 - 2"
+      "competition": "Premier League",
+      "kickoff": "2026-11-21T15:00:00Z"
     },
     {
-      "source": "Sportmonks",
-      "match": "Nordsj\u00e6lland vs Viborg FF",
-      "highTargetScore": "3 - 1"
+      "source": "GOAL-API (Fixture Feed)",
+      "match": "Slovakia W vs Bulgaria W",
+      "league": "UEFA Women's Nations League - League C",
+      "kickoff": "2027-06-15T15:00:00.000Z"
     },
     {
-      "source": "Sportmonks",
-      "match": "Silkeborg IF vs S\u00f8nderjyske Fodbold",
-      "highTargetScore": "2 - 1"
+      "source": "GOAL-API (Fixture Feed)",
+      "match": "Spain W vs Switzerland W",
+      "league": "UEFA Women's Nations League - League A",
+      "kickoff": "2027-06-15T15:00:00.000Z"
     },
     {
-      "source": "Sportmonks",
-      "match": "Br\u00f8ndby IF vs Horsens",
-      "highTargetScore": "3 - 2"
+      "source": "GOAL-API (Fixture Feed)",
+      "match": "Slovenia W vs Hungary W",
+      "league": "UEFA Women's Nations League - League B",
+      "kickoff": "2027-06-15T15:00:00.000Z"
     }
   ]
 }
