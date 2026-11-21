@@ -1,11 +1,57 @@
 {
-  "updated_at": "2026-11-21T14:34:32.793296+00:00",
-  "count": 0,
+  "updated_at": "2026-11-21T14:44:44.915237+00:00",
+  "count": 9,
   "status": {
-    "GOAL-API": "curl: (6) Could not resolve host: goal-api.com",
-    "Football-Data": "curl: (6) Could not resolve host: football-data.org",
-    "API-Football": "curl: (6) Could not resolve host: api-sports.io",
-    "Sportmonks": "curl: (3) URL rejected: Port number was not a decimal number between 0 and 65535"
+    "GOAL-API": "OK (3)",
+    "Football-Data": "OK (3)",
+    "API-Football": "OK (0)",
+    "Sportmonks": "OK (3)"
   },
-  "picks": []
+  "picks": [
+    {
+      "source": "GOAL-API",
+      "match": "Slovakia W vs Bulgaria W",
+      "highTargetScore": "2 - 1"
+    },
+    {
+      "source": "GOAL-API",
+      "match": "Spain W vs Switzerland W",
+      "highTargetScore": "3 - 1"
+    },
+    {
+      "source": "GOAL-API",
+      "match": "Slovenia W vs Hungary W",
+      "highTargetScore": "3 - 2"
+    },
+    {
+      "source": "Football-Data",
+      "match": "Middlesbrough FC vs Bristol City FC",
+      "highTargetScore": "3 - 1"
+    },
+    {
+      "source": "Football-Data",
+      "match": "Tottenham Hotspur FC vs Ipswich Town FC",
+      "highTargetScore": "2 - 2"
+    },
+    {
+      "source": "Football-Data",
+      "match": "Chelsea FC vs Leeds United FC",
+      "highTargetScore": "3 - 2"
+    },
+    {
+      "source": "Sportmonks",
+      "match": "Nordsj\u00e6lland vs Viborg FF",
+      "highTargetScore": "3 - 1"
+    },
+    {
+      "source": "Sportmonks",
+      "match": "Silkeborg IF vs S\u00f8nderjyske Fodbold",
+      "highTargetScore": "2 - 1"
+    },
+    {
+      "source": "Sportmonks",
+      "match": "Br\u00f8ndby IF vs Horsens",
+      "highTargetScore": "3 - 2"
+    }
+  ]
 }
