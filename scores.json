@@ -1,47 +1,73 @@
 {
-  "updated_at": "2026-11-21T14:52:08.351367+00:00",
-  "count": 6,
+  "updated_at": "2026-11-21T14:57:28.153034+00:00",
+  "count": 9,
   "status": {
-    "Sportmonks": "OK (0)",
-    "API-Football": "OK (0)",
-    "Football-Data": "OK (3)",
+    "Football-Data-Model": "OK (3)",
+    "Sportmonks": "OK (3)",
     "GOAL-API": "OK (3)"
   },
-  "data": [
+  "picks": [
     {
-      "source": "Football-Data (Fixture Feed)",
-      "match": "Middlesbrough FC vs Bristol City FC",
+      "source": "Football-Data (Poisson Stat Model)",
       "competition": "Championship",
+      "match": "Swansea City AFC vs West Bromwich Albion FC",
+      "projectedExactScore": "1 - 1",
+      "scoreProbability": "12.1%",
+      "over25Probability": "51.2%",
+      "expectedGoals": "1.38 - 1.37",
       "kickoff": "2026-11-21T15:00:00Z"
     },
     {
-      "source": "Football-Data (Fixture Feed)",
-      "match": "Tottenham Hotspur FC vs Ipswich Town FC",
+      "source": "Football-Data (Poisson Stat Model)",
       "competition": "Premier League",
+      "match": "AFC Bournemouth vs Nottingham Forest FC",
+      "projectedExactScore": "1 - 1",
+      "scoreProbability": "11.7%",
+      "over25Probability": "51.7%",
+      "expectedGoals": "1.62 - 1.15",
       "kickoff": "2026-11-21T15:00:00Z"
     },
     {
-      "source": "Football-Data (Fixture Feed)",
-      "match": "Chelsea FC vs Leeds United FC",
-      "competition": "Premier League",
+      "source": "Football-Data (Poisson Stat Model)",
+      "competition": "Championship",
+      "match": "Lincoln City FC vs Wrexham AFC",
+      "projectedExactScore": "1 - 1",
+      "scoreProbability": "12.0%",
+      "over25Probability": "51.8%",
+      "expectedGoals": "1.31 - 1.47",
       "kickoff": "2026-11-21T15:00:00Z"
     },
     {
-      "source": "GOAL-API (Fixture Feed)",
-      "match": "Slovakia W vs Bulgaria W",
+      "source": "Sportmonks (Upcoming Fixture)",
+      "match": "Nordsj\u00e6lland vs Viborg FF",
+      "kickoff": "2027-03-21 00:00:00"
+    },
+    {
+      "source": "Sportmonks (Upcoming Fixture)",
+      "match": "Silkeborg IF vs S\u00f8nderjyske Fodbold",
+      "kickoff": "2027-03-21 00:00:00"
+    },
+    {
+      "source": "Sportmonks (Upcoming Fixture)",
+      "match": "Br\u00f8ndby IF vs Horsens",
+      "kickoff": "2027-03-21 00:00:00"
+    },
+    {
+      "source": "GOAL-API (Upcoming Fixture)",
       "league": "UEFA Women's Nations League - League C",
+      "match": "Slovakia W vs Bulgaria W",
       "kickoff": "2027-06-15T15:00:00.000Z"
     },
     {
-      "source": "GOAL-API (Fixture Feed)",
-      "match": "Spain W vs Switzerland W",
+      "source": "GOAL-API (Upcoming Fixture)",
       "league": "UEFA Women's Nations League - League A",
+      "match": "Spain W vs Switzerland W",
       "kickoff": "2027-06-15T15:00:00.000Z"
     },
     {
-      "source": "GOAL-API (Fixture Feed)",
-      "match": "Slovenia W vs Hungary W",
+      "source": "GOAL-API (Upcoming Fixture)",
       "league": "UEFA Women's Nations League - League B",
+      "match": "Slovenia W vs Hungary W",
       "kickoff": "2027-06-15T15:00:00.000Z"
     }
   ]
