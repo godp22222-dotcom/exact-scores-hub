@@ -1,16 +1,17 @@
-name: Update Exact Scores
+name: Update Daily Exact Scores
 
 on:
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '0 12 * * *' # Runs daily at 12:00 UTC (1:00 PM WAT)
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  update:
+  update-scores:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -20,21 +21,18 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
-        run: pip install requests
-
-      - name: Run prediction script
+      - name: Run fetch_scores.py
         env:
+          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
           FOOTBALL_DATA_KEY: ${{ secrets.FOOTBALL_DATA_KEY }}
+          GOAL_API_KEY: ${{ secrets.GOAL_API_KEY }}
+          SPORTMONKS_TOKEN: ${{ secrets.SPORTMONKS_TOKEN }}
         run: python fetch_scores.py
 
-      - name: Commit updated JSON
+      - name: Commit updated scores.json
         run: |
-          git config --local user.name "github-actions[bot]"
-          git config --local user.email "github-actions[bot]@://github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@://github.com"
           git add scores.json
-          if ! git diff --staged --quiet; then
-            git commit -m "Update exact scores"
-            git pull --rebase
-            git push
-          fi
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update daily exact scores"
+          git push
