@@ -5,30 +5,24 @@ import socket
 from datetime import datetime, timezone
 import urllib.request
 import urllib.error
-from urllib.parse import urlparse
 
-LIMIT_PER_API = 3
+LIMIT_PER_API = 3  # Gets 2–3 exact scores from each API
 TIMEOUT_SEC = 12
 
 
-def get_today_date():
-    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
-
-
+# Bypass runner DNS issues using Google DNS-over-HTTPS (8.8.8.8)
 def resolve_ip_via_google_doh(hostname):
-    """Resolves domain IP directly via Google DNS-over-HTTPS (8.8.8.8) to bypass runner DNS issues."""
     doh_url = f"https://8.8.8{hostname}&type=A"
     req = urllib.request.Request(doh_url, headers={"Accept": "application/dns-json"})
     ctx = ssl.create_default_context()
     with urllib.request.urlopen(req, timeout=TIMEOUT_SEC, context=ctx) as resp:
         data = json.loads(resp.read().decode("utf-8"))
         for ans in data.get("Answer", []):
-            if ans.get("type") == 1:  # A record (IPv4)
+            if ans.get("type") == 1:
                 return ans["data"]
     raise RuntimeError(f"Could not resolve {hostname}")
 
 
-# Cache resolved IPs and route socket connections cleanly with proper SSL SNI
 _DNS_CACHE = {}
 _ORIG_CREATE_CONNECTION = socket.create_connection
 
@@ -56,75 +50,93 @@ def safe_get_json(url, headers=None):
     req = urllib.request.Request(url, headers=req_headers)
     try:
         with urllib.request.urlopen(req, timeout=TIMEOUT_SEC) as response:
-            text = response.read().decode("utf-8")
-            return json.loads(text)
+            return json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         body = e.read().decode("utf-8", errors="ignore")[:120]
         raise RuntimeError(f"HTTP {e.code}: {body}")
 
 
-# 1. API-FOOTBALL
-def fetch_api_football(today):
+# 1. API-FOOTBALL (No date filter: tries live matches, falls back to Premier League latest)
+def fetch_api_football():
     key = (os.getenv("API_FOOTBALL_KEY") or "").strip()
     if not key:
         raise ValueError("API_FOOTBALL_KEY missing")
 
-    url = f"https://api-sports.io{today}"
-    data = safe_get_json(url, headers={"x-apisports-key": key})
+    headers = {"x-apisports-key": key}
+    data = safe_get_json("https://api-sports.io", headers=headers)
+    items = data.get("response") or []
 
-    if data.get("errors"):
+    # Fallback if no live games or free-tier restriction: pull general fixtures without date
+    if not items:
+        data = safe_get_json("https://api-sports.io", headers=headers)
+        items = data.get("response") or []
+
+    if data.get("errors") and not items:
         raise ValueError(str(data["errors"]))
 
     results = []
-    for item in (data.get("response") or [])[:LIMIT_PER_API]:
+    for item in items[:LIMIT_PER_API]:
         teams = item.get("teams") or {}
         goals = item.get("goals") or {}
         status = (item.get("fixture") or {}).get("status") or {}
         results.append({
             "source": "API-Football",
-            "date": today,
             "match": f"{(teams.get('home') or {}).get('name', 'Home')} vs {(teams.get('away') or {}).get('name', 'Away')}",
             "exactScore": f"{goals.get('home') if goals.get('home') is not None else 0} - {goals.get('away') if goals.get('away') is not None else 0}",
-            "status": status.get("short", "NS")
+            "status": status.get("short", "FT")
         })
     return results
 
 
-# 2. FOOTBALL-DATA.ORG
-def fetch_football_data(today):
+# 2. FOOTBALL-DATA.ORG (No date filter: default /v4/matches returns active window automatically)
+def fetch_football_data():
     key = (os.getenv("FOOTBALL_DATA_KEY") or "").strip()
     if not key:
         raise ValueError("FOOTBALL_DATA_KEY missing")
 
-    url = f"https://football-data.org{today}&dateTo={today}"
-    data = safe_get_json(url, headers={"X-Auth-Token": key})
+    headers = {"X-Auth-Token": key}
+    data = safe_get_json("https://football-data.org", headers=headers)
+    matches = data.get("matches") or []
+
+    # Fallback to Premier League (PL) matches without date filter
+    if not matches:
+        data = safe_get_json("https://football-data.org", headers=headers)
+        matches = data.get("matches") or []
 
     results = []
-    for m in (data.get("matches") or [])[:LIMIT_PER_API]:
+    for m in matches[:LIMIT_PER_API]:
         home = (m.get("homeTeam") or {}).get("name", "Home")
         away = (m.get("awayTeam") or {}).get("name", "Away")
         ft = (m.get("score") or {}).get("fullTime") or {}
         results.append({
             "source": "Football-Data",
-            "date": today,
             "match": f"{home} vs {away}",
             "exactScore": f"{ft.get('home') if ft.get('home') is not None else 0} - {ft.get('away') if ft.get('away') is not None else 0}",
-            "status": m.get("status", "SCHEDULED")
+            "status": m.get("status", "FINISHED")
         })
     return results
 
 
-# 3. SPORTMONKS
-def fetch_sportmonks(today):
+# 3. SPORTMONKS (No date filter: tries livescores, falls back to general fixtures)
+def fetch_sportmonks():
     token = (os.getenv("SPORTMONKS_TOKEN") or "").strip()
     if not token:
         raise ValueError("SPORTMONKS_TOKEN missing")
 
-    url = f"https://sportmonks.com{today}?api_token={token}&include=scores;participants"
-    data = safe_get_json(url)
+    data = safe_get_json(
+        f"https://sportmonks.com{token}&include=scores;participants"
+    )
+    fixtures = data.get("data") or []
+
+    # Fallback to general fixtures without date filter
+    if not fixtures:
+        data = safe_get_json(
+            f"https://sportmonks.com{token}&include=scores;participants&per_page={LIMIT_PER_API}"
+        )
+        fixtures = data.get("data") or []
 
     results = []
-    for f in (data.get("data") or [])[:LIMIT_PER_API]:
+    for f in fixtures[:LIMIT_PER_API]:
         participants = f.get("participants") or []
         scores = f.get("scores") or []
 
@@ -133,18 +145,17 @@ def fetch_sportmonks(today):
 
         home_goals = next(
             ((s.get("score") or {}).get("goals") for s in scores
-             if s.get("description") == "CURRENT" and (s.get("score") or {}).get("participant") == "home"),
+             if s.get("description") in ("CURRENT", "2ND_HALF") and (s.get("score") or {}).get("participant") == "home"),
             0
         )
         away_goals = next(
             ((s.get("score") or {}).get("goals") for s in scores
-             if s.get("description") == "CURRENT" and (s.get("score") or {}).get("participant") == "away"),
+             if s.get("description") in ("CURRENT", "2ND_HALF") and (s.get("score") or {}).get("participant") == "away"),
             0
         )
 
         results.append({
             "source": "Sportmonks",
-            "date": today,
             "match": f"{home} vs {away}",
             "exactScore": f"{home_goals if home_goals is not None else 0} - {away_goals if away_goals is not None else 0}",
             "status": str(f.get("state_id", "LIVE"))
@@ -152,16 +163,31 @@ def fetch_sportmonks(today):
     return results
 
 
-# 4. GOAL API (Official v1/fixtures/date/{date} endpoint)
-def fetch_goal_api(today):
+# 4. GOAL API (No date filter: tries live fixtures, falls back to general fixtures)
+def fetch_goal_api():
     key = (os.getenv("GOAL_API_KEY") or "").strip()
     if not key:
         raise ValueError("GOAL_API_KEY missing")
 
-    url = f"https://api.goal-api.com/v1/fixtures/date/{today}?limit={LIMIT_PER_API}"
-    data = safe_get_json(url, headers={"Authorization": f"Bearer {key}"})
+    headers = {"Authorization": f"Bearer {key}"}
+    matches = []
+    last_err = None
 
-    matches = data if isinstance(data, list) else (data.get("data") or [])
+    for url in [
+        f"https://goal-api.com{LIMIT_PER_API}",
+        f"https://goal-api.com{LIMIT_PER_API}"
+    ]:
+        try:
+            data = safe_get_json(url, headers=headers)
+            matches = data if isinstance(data, list) else (data.get("data") or [])
+            if matches:
+                break
+        except Exception as e:
+            last_err = e
+
+    if not matches and last_err:
+        raise last_err
+
     results = []
     for m in matches[:LIMIT_PER_API]:
         home = m.get("homeTeamName") or (m.get("homeTeam") or {}).get("name") or "Home"
@@ -170,16 +196,14 @@ def fetch_goal_api(today):
         aws = m.get("awayTeamScore") if m.get("awayTeamScore") is not None else (m.get("awayScore") if m.get("awayScore") is not None else 0)
         results.append({
             "source": "GOAL-API",
-            "date": today,
             "match": f"{home} vs {away}",
             "exactScore": f"{hs} - {aws}",
-            "status": m.get("matchStatus") or "SCHEDULED"
+            "status": m.get("matchStatus") or "LIVE"
         })
     return results
 
 
 def main():
-    today = get_today_date()
     fetchers = [
         ("API-Football", fetch_api_football),
         ("Football-Data", fetch_football_data),
@@ -190,7 +214,7 @@ def main():
     all_scores = []
     for name, fn in fetchers:
         try:
-            items = fn(today)
+            items = fn()
             print(f"[OK] {name}: fetched {len(items)} matches")
             all_scores.extend(items)
         except Exception as e:
@@ -198,7 +222,6 @@ def main():
 
     output = {
         "updated_at": datetime.now(timezone.utc).isoformat(),
-        "date": today,
         "count": len(all_scores),
         "matches": all_scores
     }
