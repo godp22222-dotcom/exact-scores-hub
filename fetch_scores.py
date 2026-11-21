@@ -73,6 +73,15 @@ def predict_scores(home_id, away_id, comp_stats):
     best_ht, raw_ht_prob = next(iter(ht_matrix))
     best_ht_prob = round(raw_ht_prob * 100, 1)
 
+    premium_exact_scores = [
+        {
+            "rank": idx,
+            "score": s,
+            "probability": f"{round(p * 100, 1)}%"
+        }
+        for idx, (s, p, _) in enumerate(ft_matrix[:3], start=1)
+    ]
+
     high_score_candidates = [
         {"score": s, "probability": f"{round(p * 100, 1)}%"}
         for s, p, total_goals in ft_matrix
@@ -94,6 +103,7 @@ def predict_scores(home_id, away_id, comp_stats):
         "ft_score": best_ft,
         "ft_probability": f"{best_ft_prob}%",
         "ht_ft_combo": f"{best_ht} / {best_ft}",
+        "premium_exact_scores": premium_exact_scores,
         "high_scores": high_score_candidates,
         "all_ht_scores": all_ht_scores,
         "all_ft_scores": all_ft_scores
@@ -128,6 +138,7 @@ for m in matches:
             "ft_score": scores["ft_score"],
             "ft_probability": scores["ft_probability"],
             "ht_ft_combo": scores["ht_ft_combo"],
+            "premium_exact_scores": scores["premium_exact_scores"],
             "high_scores": scores["high_scores"],
             "all_ht_scores": scores["all_ht_scores"],
             "all_ft_scores": scores["all_ft_scores"]
@@ -145,3 +156,4 @@ with open("scores.json", "w", encoding="utf-8") as f:
     json.dump(output, f, indent=2, ensure_ascii=False)
 
 print(f"Saved {len(predictions_list)} predictions to scores.json!")
+        
