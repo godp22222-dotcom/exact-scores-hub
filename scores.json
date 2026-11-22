@@ -1,34 +1,13 @@
 {
-  "updated_at_Nigeria": "2026-11-22 11:42 AM WAT",
-  "count": 12,
+  "updated_at_Nigeria": "2026-11-22 01:39 PM WAT",
+  "count": 9,
   "status": {
-    "API-Football": "OK (3)",
+    "API-Football": "OK (0)",
     "Sportmonks": "OK (3)",
     "Football-Data": "OK (3)",
     "GOAL-API": "OK (3)"
   },
   "picks": [
-    {
-      "source": "API-Football",
-      "match": "Grama vs Peralada",
-      "kickoff_Nigeria": "2026-11-22 11:45 AM WAT",
-      "halfTimeExactScore": "0 - 0",
-      "fullTimeExactScore": "1 - 0"
-    },
-    {
-      "source": "API-Football",
-      "match": "Dinamo Samarqand vs Bunyodkor",
-      "kickoff_Nigeria": "2026-11-22 12:00 PM WAT",
-      "halfTimeExactScore": "0 - 0",
-      "fullTimeExactScore": "2 - 1"
-    },
-    {
-      "source": "API-Football",
-      "match": "Arsenal vs Neman",
-      "kickoff_Nigeria": "2026-11-22 12:00 PM WAT",
-      "halfTimeExactScore": "0 - 0",
-      "fullTimeExactScore": "0 - 1"
-    },
     {
       "source": "Sportmonks",
       "match": "Horsens vs Silkeborg IF",
@@ -52,22 +31,22 @@
     },
     {
       "source": "Football-Data",
-      "match": "FC Twente '65 vs Willem II Tilburg",
-      "kickoff_Nigeria": "2026-11-22 12:15 PM WAT",
+      "match": "FC Barcelona vs Villarreal CF",
+      "kickoff_Nigeria": "2026-11-22 02:00 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
     {
       "source": "Football-Data",
-      "match": "Juventus FC vs Venezia FC",
-      "kickoff_Nigeria": "2026-11-22 12:30 PM WAT",
+      "match": "AFC Ajax vs ADO Den Haag",
+      "kickoff_Nigeria": "2026-11-22 02:30 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
     {
       "source": "Football-Data",
-      "match": "Burnley FC vs Blackburn Rovers FC",
-      "kickoff_Nigeria": "2026-11-22 01:00 PM WAT",
+      "match": "Sparta Rotterdam vs AZ",
+      "kickoff_Nigeria": "2026-11-22 02:30 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
