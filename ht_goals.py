@@ -6,7 +6,6 @@ from datetime import datetime, timezone, timedelta
 LIMIT_HT_GOALS = 5
 WAT_TZ = timezone(timedelta(hours=1))  # Nigeria Time (UTC+1)
 
-# High-scoring First Half (HT) exact scores (2+ first-half goals)
 TARGET_HT_SCORES = {
     "1 - 1",
     "2 - 0", "0 - 2",
@@ -63,7 +62,6 @@ def format_wat(raw_dt):
 
 
 def pick_best_ht_score(values_list):
-    """Finds the lowest-odds high-scoring First Half exact score (2+ goals in 1st half)."""
     best_odd = 9999.0
     best_score = None
     ht_odds = {}
@@ -98,16 +96,10 @@ def fetch_ht_goal_matches():
     hdr = {"x-apisports-key": key}
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
-    resp_data = get_json(host, f"/fixtures?date={today}&status=NS", hdr)
-    errors = resp_data.get("errors")
-    if errors:
-        raise RuntimeError(f"API-Football limit/error: {errors}")
-
-    fixtures = resp_data.get("response") or []
+    fixtures = get_json(host, f"/fixtures?date={today}&status=NS", hdr).get("response") or []
     candidates = []
 
-    # Scan up to 15 upcoming fixtures to stay within API-Football's daily free quota
-    for item in fixtures[:15]:
+    for item in fixtures[:10]:
         wat = format_wat((item.get("fixture") or {}).get("date", ""))
         if not wat:
             continue
@@ -119,7 +111,6 @@ def fetch_ht_goal_matches():
         away = (teams.get("away") or {}).get("name", "Away")
 
         try:
-            # bet=31 is First-Half Exact Score on API-Football
             odds_resp = get_json(host, f"/odds?fixture={fix_id}&bet=31", hdr).get("response") or []
             if not odds_resp:
                 continue
