@@ -54,7 +54,6 @@ def format_wat(raw_dt):
 
 
 def pick_best_draw(values_list):
-    """Finds the lowest-odds exact draw strictly between 0 - 0 and 1 - 1."""
     best_odd = 9999.0
     best_score = None
     draw_odds = {}
@@ -92,8 +91,7 @@ def fetch_draw_matches():
     fixtures = get_json(host, f"/fixtures?date={today}&status=NS", hdr).get("response") or []
     candidates = []
 
-    # Scan up to 20 upcoming fixtures to stay safely within API-Football's daily free quota
-    for item in fixtures[:20]:
+    for item in fixtures[:12]:
         wat = format_wat((item.get("fixture") or {}).get("date", ""))
         if not wat:
             continue
@@ -128,7 +126,6 @@ def fetch_draw_matches():
         except Exception:
             continue
 
-    # Rank matches by lowest draw odd (strongest 0-0 or 1-1 probability)
     candidates.sort(key=lambda x: x["bestDrawOdd"])
     return candidates[:LIMIT_DRAWS]
 
