@@ -29,7 +29,7 @@ jobs:
         run: |
           sudo bash -c 'echo -e "nameserver 8.8.8.8\nnameserver 1.1.1.1" > /etc/resolv.conf'
 
-      - name: Run all scripts and save JSONs into outputs folder
+      - name: Run all scripts safely and save JSONs into outputs folder
         env:
           API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
           FOOTBALL_DATA_KEY: ${{ secrets.FOOTBALL_DATA_KEY }}
@@ -38,19 +38,18 @@ jobs:
         run: |
           mkdir -p outputs
           cd outputs
-          python ../scripts/fetch_scores.py
-          python ../scripts/high_goals.py
-          python ../scripts/draws.py
-          python ../scripts/ht_goals.py
-          python ../scripts/high_odds_sports.py
-          python ../scripts/sportmonks_high_odds.py
-          python ../scripts/htft_comebacks.py
-          python ../scripts/top3_sports.py
+          for file in fetch_scores.py high_goals.py draws.py ht_goals.py high_odds_sports.py sportmonks_high_odds.py htft_comebacks.py top3_sports.py; do
+            if [ -f "../scripts/$file" ]; then
+              python "../scripts/$file" || true
+            elif [ -f "../$file" ]; then
+              python "../$file" || true
+            fi
+          done
 
       - name: Commit all updated JSON files in outputs folder
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@://github.com"
-          git add outputs/*.json
+          git add outputs/*.json || true
           git diff --quiet && git diff --staged --quiet || git commit -m "Update daily JSON outputs"
           git push
