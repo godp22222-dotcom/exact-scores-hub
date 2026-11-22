@@ -1,31 +1,31 @@
 {
-  "updated_at_Nigeria": "2026-11-22 08:05 AM WAT",
+  "updated_at_Nigeria": "2026-11-22 09:55 AM WAT",
   "count": 9,
   "status": {
     "API-Football": "OK (3)",
-    "Sportmonks": "OK (0)",
+    "Sportmonks": "Missing SPORTMONKS_TOKEN",
     "Football-Data": "OK (3)",
     "GOAL-API": "OK (3)"
   },
   "picks": [
     {
       "source": "API-Football",
-      "match": "Paju Citizen vs Cheonan City",
-      "kickoff_Nigeria": "2026-11-22 08:30 AM WAT",
+      "match": "Viktoria \u017di\u017ekov vs Opava",
+      "kickoff_Nigeria": "2026-11-22 10:15 AM WAT",
       "halfTimeExactScore": "0 - 0",
       "fullTimeExactScore": "1 - 1"
     },
     {
       "source": "API-Football",
-      "match": "Seoul E-Land FC vs Asan Mugunghwa",
-      "kickoff_Nigeria": "2026-11-22 08:30 AM WAT",
+      "match": "Lozova vs Metalurh Zaporizhya",
+      "kickoff_Nigeria": "2026-11-22 10:30 AM WAT",
       "halfTimeExactScore": "0 - 0",
       "fullTimeExactScore": "1 - 1"
     },
     {
       "source": "API-Football",
-      "match": "Taichung Futuro vs Hang Yuen",
-      "kickoff_Nigeria": "2026-11-22 08:30 AM WAT",
+      "match": "Kuala Lumpur FA vs Penang",
+      "kickoff_Nigeria": "2026-11-22 10:30 AM WAT",
       "halfTimeExactScore": "0 - 0",
       "fullTimeExactScore": "1 - 1"
     },
