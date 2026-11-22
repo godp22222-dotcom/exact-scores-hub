@@ -1,5 +1,5 @@
 {
-  "updated_at_Nigeria": "2026-11-21 05:15 PM WAT",
+  "updated_at_Nigeria": "2026-11-22 06:59 AM WAT",
   "count": 9,
   "status": {
     "API-Football": "OK (3)",
@@ -10,43 +10,43 @@
   "picks": [
     {
       "source": "API-Football",
-      "match": "Gais vs Vasteras SK FK",
-      "kickoff_Nigeria": "2026-11-21 05:30 PM WAT",
+      "match": "Osaka vs Kamatamare Sanuki",
+      "kickoff_Nigeria": "2026-11-22 07:00 AM WAT",
+      "halfTimeExactScore": "0 - 0",
+      "fullTimeExactScore": "1 - 0"
+    },
+    {
+      "source": "API-Football",
+      "match": "Shatin vs Eastern",
+      "kickoff_Nigeria": "2026-11-22 08:00 AM WAT",
       "halfTimeExactScore": "0 - 0",
       "fullTimeExactScore": "1 - 1"
     },
     {
       "source": "API-Football",
-      "match": "Zaglebie Lubin vs Gornik Zabrze",
-      "kickoff_Nigeria": "2026-11-21 05:30 PM WAT",
-      "halfTimeExactScore": "0 - 0",
-      "fullTimeExactScore": "0 - 1"
-    },
-    {
-      "source": "API-Football",
-      "match": "Mura vs Bravo",
-      "kickoff_Nigeria": "2026-11-21 05:30 PM WAT",
-      "halfTimeExactScore": "0 - 0",
-      "fullTimeExactScore": "1 - 1"
+      "match": "Mendiola vs Kaya",
+      "kickoff_Nigeria": "2026-11-22 08:00 AM WAT",
+      "halfTimeExactScore": "0 - 1",
+      "fullTimeExactScore": "0 - 3"
     },
     {
       "source": "Football-Data",
-      "match": "Parma Calcio 1913 vs AS Roma",
-      "kickoff_Nigeria": "2026-11-21 06:00 PM WAT",
+      "match": "FC Twente '65 vs Willem II Tilburg",
+      "kickoff_Nigeria": "2026-11-22 12:15 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
     {
       "source": "Football-Data",
-      "match": "FC Schalke 04 vs VfB Stuttgart",
-      "kickoff_Nigeria": "2026-11-21 06:30 PM WAT",
+      "match": "Juventus FC vs Venezia FC",
+      "kickoff_Nigeria": "2026-11-22 12:30 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
     {
       "source": "Football-Data",
-      "match": "Sevilla FC vs Real Betis Balompi\u00e9",
-      "kickoff_Nigeria": "2026-11-21 06:30 PM WAT",
+      "match": "Burnley FC vs Blackburn Rovers FC",
+      "kickoff_Nigeria": "2026-11-22 01:00 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
