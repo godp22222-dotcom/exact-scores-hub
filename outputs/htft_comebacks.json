@@ -1,40 +1,28 @@
 {
-  "updated_at_Nigeria": "2026-11-22 05:47 PM WAT",
+  "updated_at_Nigeria": "2026-11-22 09:39 PM WAT",
   "date": "2026-11-22",
-  "count": 4,
+  "count": 3,
   "football_picks": [
     {
-      "competition": "Serie A",
-      "match": "AC Milan vs Frosinone Calcio",
-      "kickoff_UTC": "2026-11-22T17:00:00Z",
+      "competition": "Campeonato Brasileiro S\u00e9rie A",
+      "match": "Fluminense FC vs Mirassol FC",
+      "kickoff_UTC": "2026-11-22T21:30:00Z",
       "recommended_pick": "2/1 (Away HT / Home FT)",
       "target_odd": 24.0,
       "notes": [
-        "Select 2/1: Back Frosinone Calcio to strike first before AC Milan dominate the second half for a home turnaround.",
-        "Second-Half Trigger: Best value comes when halftime finishes 0-1 or 1-0 with the trailing side controlling shots.",
-        "Stake Rule: Play as a single on Football.com under Half-Time / Full-Time."
-      ]
-    },
-    {
-      "competition": "Primera Division",
-      "match": "CA Osasuna vs M\u00e1laga CF",
-      "kickoff_UTC": "2026-11-22T17:30:00Z",
-      "recommended_pick": "1/2 (Home HT / Away FT)",
-      "target_odd": 23.0,
-      "notes": [
-        "Select 1/2: Back CA Osasuna to grab an early first-half edge before M\u00e1laga CF's quality takes over after the break.",
+        "Select 2/1: Back Mirassol FC to strike first before Fluminense FC dominate the second half for a home turnaround.",
         "Second-Half Trigger: Best value comes when halftime finishes 0-1 or 1-0 with the trailing side controlling shots.",
         "Stake Rule: Play as a single on Football.com under Half-Time / Full-Time."
       ]
     },
     {
       "competition": "Campeonato Brasileiro S\u00e9rie A",
-      "match": "CA Paranaense vs Clube do Remo",
-      "kickoff_UTC": "2026-11-22T19:00:00Z",
-      "recommended_pick": "2/1 (Away HT / Home FT)",
-      "target_odd": 24.0,
+      "match": "RB Bragantino vs CR Vasco da Gama",
+      "kickoff_UTC": "2026-11-22T22:30:00Z",
+      "recommended_pick": "1/2 (Home HT / Away FT)",
+      "target_odd": 23.0,
       "notes": [
-        "Select 2/1: Back Clube do Remo to strike first before CA Paranaense dominate the second half for a home turnaround.",
+        "Select 1/2: Back RB Bragantino to grab an early first-half edge before CR Vasco da Gama's quality takes over after the break.",
         "Second-Half Trigger: Best value comes when halftime finishes 0-1 or 1-0 with the trailing side controlling shots.",
         "Stake Rule: Play as a single on Football.com under Half-Time / Full-Time."
       ]
