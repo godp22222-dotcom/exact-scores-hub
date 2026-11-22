@@ -15,14 +15,14 @@ NOW_WAT = datetime.now(WAT)
 TODAY = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
 SPORTS_CONFIG = {
-    "hockey": f"https://api-sports.io{TODAY}",
-    "nba": f"https://api-sports.io{TODAY}",
-    "basketball": f"https://api-sports.io{TODAY}",
-    "nfl": f"https://api-sports.io{TODAY}",
-    "rugby": f"https://api-sports.io{TODAY}",
-    "volleyball": f"https://api-sports.io{TODAY}",
-    "baseball": f"https://api-sports.io{TODAY}",
-    "mma": f"https://api-sports.io{TODAY}"
+    "hockey": "https://api-sports.io",
+    "nba": "https://api-sports.io",
+    "basketball": "https://api-sports.io",
+    "nfl": "https://api-sports.io",
+    "rugby": "https://api-sports.io",
+    "volleyball": "https://api-sports.io",
+    "baseball": "https://api-sports.io",
+    "mma": "https://api-sports.io"
 }
 
 def run():
@@ -34,12 +34,12 @@ def run():
         "picks": []
     }
 
-    # 1. Check API-Sports multi-sport endpoints
+    # 1. Pull API-Sports multi-sport endpoints safely using params
     if APISPORTS_KEY:
         headers = {"x-apisports-key": APISPORTS_KEY}
         for sport, url in SPORTS_CONFIG.items():
             try:
-                res = requests.get(url, headers=headers, timeout=15).json()
+                res = requests.get(url, headers=headers, params={"date": TODAY}, timeout=15).json()
                 errors = res.get("errors")
                 games = res.get("response", [])
                 if errors:
@@ -59,12 +59,13 @@ def run():
             except Exception as e:
                 final_output["diagnostics"][sport] = f"Error: {e}"
 
-    # 2. Pull guaranteed upcoming matches from Football-Data.org (already in your secrets!)
+    # 2. Pull guaranteed upcoming matches from Football-Data.org safely using params
     if FOOTBALL_DATA_KEY:
         try:
             fd_res = requests.get(
-                f"https://football-data.org{TODAY}&dateTo={TODAY}",
+                "https://football-data.org",
                 headers={"X-Auth-Token": FOOTBALL_DATA_KEY},
+                params={"dateFrom": TODAY, "dateTo": TODAY},
                 timeout=15
             ).json()
             matches = fd_res.get("matches", [])
