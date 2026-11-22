@@ -1,33 +1,8 @@
 {
-  "updated_at_Nigeria": "2026-11-22 09:39 PM WAT",
+  "updated_at_Nigeria": "2026-11-23 12:03 AM WAT",
   "date": "2026-11-22",
-  "count": 3,
-  "football_picks": [
-    {
-      "competition": "Campeonato Brasileiro S\u00e9rie A",
-      "match": "Fluminense FC vs Mirassol FC",
-      "kickoff_UTC": "2026-11-22T21:30:00Z",
-      "recommended_pick": "2/1 (Away HT / Home FT)",
-      "target_odd": 24.0,
-      "notes": [
-        "Select 2/1: Back Mirassol FC to strike first before Fluminense FC dominate the second half for a home turnaround.",
-        "Second-Half Trigger: Best value comes when halftime finishes 0-1 or 1-0 with the trailing side controlling shots.",
-        "Stake Rule: Play as a single on Football.com under Half-Time / Full-Time."
-      ]
-    },
-    {
-      "competition": "Campeonato Brasileiro S\u00e9rie A",
-      "match": "RB Bragantino vs CR Vasco da Gama",
-      "kickoff_UTC": "2026-11-22T22:30:00Z",
-      "recommended_pick": "1/2 (Home HT / Away FT)",
-      "target_odd": 23.0,
-      "notes": [
-        "Select 1/2: Back RB Bragantino to grab an early first-half edge before CR Vasco da Gama's quality takes over after the break.",
-        "Second-Half Trigger: Best value comes when halftime finishes 0-1 or 1-0 with the trailing side controlling shots.",
-        "Stake Rule: Play as a single on Football.com under Half-Time / Full-Time."
-      ]
-    }
-  ],
+  "count": 1,
+  "football_picks": [],
   "other_sports_picks": [
     {
       "sport": "BASKETBALL",
