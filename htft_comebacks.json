@@ -1,54 +1,59 @@
 {
-  "updated_at_Nigeria": "2026-11-22 05:05 PM WAT",
+  "updated_at_Nigeria": "2026-11-22 05:12 PM WAT",
   "date": "2026-11-22",
-  "markets": "1/2 (Home HT / Away FT) & 2/1 (Away HT / Home FT)",
   "count": 5,
-  "football_picks": [],
+  "football_picks": [
+    {
+      "competition": "Eredivisie",
+      "match": "FC Twente '65 vs Willem II Tilburg",
+      "kickoff_UTC": "2026-11-22T11:15:00Z",
+      "recommended_pick": "2/1 (Away HT / Home FT)",
+      "target_odd": 24.0,
+      "notes": [
+        "Select 2/1: Back Willem II Tilburg to strike first before FC Twente '65 dominate the second half for a home turnaround.",
+        "Second-Half Trigger: Best value comes when halftime finishes 0-1 or 1-0 with the trailing side controlling shots.",
+        "Stake Rule: Play as a single on Football.com under Half-Time / Full-Time."
+      ]
+    },
+    {
+      "competition": "Serie A",
+      "match": "Juventus FC vs Venezia FC",
+      "kickoff_UTC": "2026-11-22T11:30:00Z",
+      "recommended_pick": "1/2 (Home HT / Away FT)",
+      "target_odd": 23.0,
+      "notes": [
+        "Select 1/2: Back Juventus FC to grab an early first-half edge before Venezia FC's quality takes over after the break.",
+        "Second-Half Trigger: Best value comes when halftime finishes 0-1 or 1-0 with the trailing side controlling shots.",
+        "Stake Rule: Play as a single on Football.com under Half-Time / Full-Time."
+      ]
+    },
+    {
+      "competition": "Championship",
+      "match": "Burnley FC vs Blackburn Rovers FC",
+      "kickoff_UTC": "2026-11-22T12:00:00Z",
+      "recommended_pick": "2/1 (Away HT / Home FT)",
+      "target_odd": 24.0,
+      "notes": [
+        "Select 2/1: Back Blackburn Rovers FC to strike first before Burnley FC dominate the second half for a home turnaround.",
+        "Second-Half Trigger: Best value comes when halftime finishes 0-1 or 1-0 with the trailing side controlling shots.",
+        "Stake Rule: Play as a single on Football.com under Half-Time / Full-Time."
+      ]
+    }
+  ],
   "other_sports_picks": [
     {
       "sport": "HOCKEY",
-      "match": "Florida Everblades vs Savannah Ghost Pirates",
-      "markets": {
-        "1/2 (Home HT / Away FT)": "Check 1/2 on Football.com",
-        "2/1 (Away HT / Home FT)": "Check 2/1 on Football.com"
-      },
-      "note": "Single HOCKEY comeback target: watch halftime deficit for live 1/2 or 2/1 swing on Football.com."
-    },
-    {
-      "sport": "NBA",
-      "match": "New York Knicks vs Portland Trail Blazers",
-      "markets": {
-        "1/2 (Home HT / Away FT)": "Check 1/2 on Football.com",
-        "2/1 (Away HT / Home FT)": "Check 2/1 on Football.com"
-      },
-      "note": "Single NBA comeback target: watch halftime deficit for live 1/2 or 2/1 swing on Football.com."
+      "match": "Cleveland Monsters vs Utica Comets",
+      "recommended_pick": "1/2 (Home HT / Away FT)",
+      "odd": 1.44,
+      "note": "Play 1/2: Utica Comets are favored to overturn an early Cleveland Monsters halftime lead."
     },
     {
       "sport": "BASKETBALL",
       "match": "VMI vs Gardner Webb",
-      "markets": {
-        "1/2 (Home HT / Away FT)": 10.0,
-        "2/1 (Away HT / Home FT)": 6.5
-      },
-      "note": "Single BASKETBALL comeback target: watch halftime deficit for live 1/2 or 2/1 swing on Football.com."
-    },
-    {
-      "sport": "NFL",
-      "match": "Miami vs Virginia Tech",
-      "markets": {
-        "1/2 (Home HT / Away FT)": "Check 1/2 on Football.com",
-        "2/1 (Away HT / Home FT)": "Check 2/1 on Football.com"
-      },
-      "note": "Single NFL comeback target: watch halftime deficit for live 1/2 or 2/1 swing on Football.com."
-    },
-    {
-      "sport": "RUGBY",
-      "match": "Kharebi Rustavi vs Batumi",
-      "markets": {
-        "1/2 (Home HT / Away FT)": "Check 1/2 on Football.com",
-        "2/1 (Away HT / Home FT)": "Check 2/1 on Football.com"
-      },
-      "note": "Single RUGBY comeback target: watch halftime deficit for live 1/2 or 2/1 swing on Football.com."
+      "recommended_pick": "2/1 (Away HT / Home FT)",
+      "odd": 6.5,
+      "note": "Play 2/1: VMI are favored to overturn an early Gardner Webb halftime lead."
     }
   ]
 }
