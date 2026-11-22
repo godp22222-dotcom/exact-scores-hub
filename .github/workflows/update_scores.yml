@@ -29,7 +29,7 @@ jobs:
         run: |
           sudo bash -c 'echo -e "nameserver 8.8.8.8\nnameserver 1.1.1.1" > /etc/resolv.conf'
 
-      - name: Run all exact score and high odds scripts
+      - name: Run all exact score, high odds, and HT/FT comeback scripts
         env:
           API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
           FOOTBALL_DATA_KEY: ${{ secrets.FOOTBALL_DATA_KEY }}
@@ -42,11 +42,12 @@ jobs:
           python ht_goals.py
           python high_odds_sports.py
           python sportmonks_high_odds.py
+          python htft_comebacks.py
 
       - name: Commit all updated JSON files
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add scores.json high_goals.json draws.json ht_goals.json high_odds_sports.json sportmonks_high_odds.json
-          git diff --quiet && git diff --staged --quiet || git commit -m "Update daily scores, high goals, draws, HT goals, and high odds sports"
+          git config user.email "github-actions[bot]@://github.com"
+          git add scores.json high_goals.json draws.json ht_goals.json high_odds_sports.json sportmonks_high_odds.json htft_comebacks.json
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update daily scores, high goals, draws, HT goals, high odds, and HT/FT comebacks"
           git push
