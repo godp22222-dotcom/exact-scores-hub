@@ -4,190 +4,95 @@ import requests
 from datetime import datetime, timezone, timedelta
 
 APISPORTS_KEY = (
-    os.environ.get("API_KEY")
-    or os.environ.get("API_FOOTBALL_KEY")
-    or os.environ.get("APISPORTS_KEY")
+    os.environ.get("API_FOOTBALL_KEY")
+    or os.environ.get("API_KEY")
 )
-
-SPORTMONKS_TOKEN = (
-    os.environ.get("SPORTMONKS_TOKEN")
-    or os.environ.get("SPORTMONKS_API_KEY")
-    or os.environ.get("SPORTMONKS_KEY")
-)
+SPORTMONKS_TOKEN = os.environ.get("SPORTMONKS_TOKEN")
+FOOTBALL_DATA_KEY = os.environ.get("FOOTBALL_DATA_KEY")
 
 WAT = timezone(timedelta(hours=1))
 NOW_WAT = datetime.now(WAT)
 TODAY = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
-APISPORTS_HEADERS = {
-    "x-apisports-key": APISPORTS_KEY or ""
-}
-
 SPORTS_CONFIG = {
-    "hockey": {
-        "games_url": f"https://api-sports.io{TODAY}",
-        "odds_url": "https://api-sports.io",
-        "id_param": "game"
-    },
-    "nba": {
-        "games_url": f"https://api-sports.io{TODAY}",
-        "odds_url": "https://api-sports.io",
-        "id_param": "game"
-    },
-    "basketball": {
-        "games_url": f"https://api-sports.io{TODAY}",
-        "odds_url": "https://api-sports.io",
-        "id_param": "game"
-    },
-    "nfl": {
-        "games_url": f"https://api-sports.io{TODAY}",
-        "odds_url": "https://api-sports.io",
-        "id_param": "game"
-    },
-    "rugby": {
-        "games_url": f"https://api-sports.io{TODAY}",
-        "odds_url": "https://api-sports.io",
-        "id_param": "game"
-    },
-    "volleyball": {
-        "games_url": f"https://api-sports.io{TODAY}",
-        "odds_url": "https://api-sports.io",
-        "id_param": "game"
-    },
-    "baseball": {
-        "games_url": f"https://api-sports.io{TODAY}",
-        "odds_url": "https://api-sports.io",
-        "id_param": "game"
-    },
-    "mma": {
-        "games_url": f"https://api-sports.io{TODAY}",
-        "odds_url": "https://api-sports.io",
-        "id_param": "fight"
-    }
+    "hockey": f"https://api-sports.io{TODAY}",
+    "nba": f"https://api-sports.io{TODAY}",
+    "basketball": f"https://api-sports.io{TODAY}",
+    "nfl": f"https://api-sports.io{TODAY}",
+    "rugby": f"https://api-sports.io{TODAY}",
+    "volleyball": f"https://api-sports.io{TODAY}",
+    "baseball": f"https://api-sports.io{TODAY}",
+    "mma": f"https://api-sports.io{TODAY}"
 }
-
-def extract_all_highest_odds(odds_response):
-    best_picks = []
-    for item in odds_response:
-        for bookmaker in item.get("bookmakers", []):
-            for bet in bookmaker.get("bets", []):
-                bet_name = bet.get("name", "Market")
-                for val in bet.get("values", []):
-                    try:
-                        odd_float = float(val.get("odd", 0))
-                        if odd_float >= 1.80:
-                            best_picks.append({
-                                "market": bet_name,
-                                "selection": str(val.get("value")),
-                                "odd": odd_float,
-                                "bookmaker": bookmaker.get("name")
-                            })
-                    except (ValueError, TypeError):
-                        continue
-    best_picks.sort(key=lambda x: x["odd"], reverse=True)
-    seen = set()
-    unique_top = []
-    for p in best_picks:
-        key = (p["market"], p["selection"])
-        if key not in seen:
-            seen.add(key)
-            unique_top.append(p)
-        if len(unique_top) == 3:
-            break
-    return unique_top
-
-def fetch_sportmonks(picks_list):
-    if not SPORTMONKS_TOKEN:
-        return
-    url = f"https://sportmonks.com{TODAY}"
-    params = {"api_token": SPORTMONKS_TOKEN, "include": "odds"}
-    try:
-        res = requests.get(url, params=params, timeout=20).json()
-        for fx in res.get("data", []):
-            match_name = fx.get("name", "Unknown Match")
-            high_odds = []
-            for odd in fx.get("odds", []):
-                try:
-                    val = float(odd.get("value", 0))
-                    if val >= 2.50:
-                        high_odds.append({
-                            "market": odd.get("market_description", "Market"),
-                            "selection": str(odd.get("label")),
-                            "odd": val,
-                            "bookmaker": "Sportmonks"
-                        })
-                except (ValueError, TypeError):
-                    continue
-            high_odds.sort(key=lambda x: x["odd"], reverse=True)
-            seen = set()
-            unique_sm = []
-            for p in high_odds:
-                key = (p["market"], p["selection"])
-                if key not in seen:
-                    seen.add(key)
-                    unique_sm.append(p)
-                if len(unique_sm) == 3:
-                    break
-            if unique_sm:
-                picks_list.append({
-                    "source": "Sportmonks",
-                    "sport": "FOOTBALL",
-                    "match": match_name,
-                    "highest_odds": unique_sm
-                })
-    except Exception as e:
-        print(f"[SPORTMONKS] Skipped: {e}")
 
 def run():
     final_output = {
         "updated_at_Nigeria": NOW_WAT.strftime("%Y-%m-%d %I:%M %p WAT"),
         "date": TODAY,
+        "diagnostics": {},
         "count": 0,
         "picks": []
     }
 
-    fetch_sportmonks(final_output["picks"])
-
+    # 1. Check API-Sports multi-sport endpoints
     if APISPORTS_KEY:
-        for sport, cfg in SPORTS_CONFIG.items():
+        headers = {"x-apisports-key": APISPORTS_KEY}
+        for sport, url in SPORTS_CONFIG.items():
             try:
-                g_res = requests.get(cfg["games_url"], headers=APISPORTS_HEADERS, timeout=20).json()
-                games = g_res.get("response", [])
-                for g in games[:5]:
-                    game_id = g.get("id") or g.get("game", {}).get("id")
-                    teams = g.get("teams", {})
-                    if isinstance(teams, dict):
+                res = requests.get(url, headers=headers, timeout=15).json()
+                errors = res.get("errors")
+                games = res.get("response", [])
+                if errors:
+                    final_output["diagnostics"][sport] = str(errors)
+                else:
+                    final_output["diagnostics"][sport] = f"OK ({len(games)} games)"
+                    for g in games[:5]:
+                        teams = g.get("teams", {})
                         home = teams.get("home", {}).get("name") or teams.get("visitors", {}).get("name") or "Home"
                         away = teams.get("away", {}).get("name") or "Away"
-                        match_name = f"{home} vs {away}"
-                    else:
-                        match_name = f"{sport.upper()} Event #{game_id}"
-
-                    if not game_id:
-                        continue
-
-                    o_res = requests.get(
-                        cfg["odds_url"],
-                        headers=APISPORTS_HEADERS,
-                        params={cfg["id_param"]: game_id},
-                        timeout=20
-                    ).json()
-
-                    top_odds = extract_all_highest_odds(o_res.get("response", []))
-                    final_output["picks"].append({
-                        "source": "API-Sports",
-                        "sport": sport.upper(),
-                        "match": match_name,
-                        "status": g.get("status", {}).get("long", "Scheduled") if isinstance(g.get("status"), dict) else "Scheduled",
-                        "highest_odds": top_odds if top_odds else "Odds restricted on free tier - check Football.com"
-                    })
+                        final_output["picks"].append({
+                            "source": "API-Sports",
+                            "sport": sport.upper(),
+                            "match": f"{home} vs {away}",
+                            "high_odds_target": "Check HT/FT Comeback (2/1) or Winning Margin on Football.com"
+                        })
             except Exception as e:
-                print(f"[{sport.upper()}] Skipped: {e}")
+                final_output["diagnostics"][sport] = f"Error: {e}"
+
+    # 2. Pull guaranteed upcoming matches from Football-Data.org (already in your secrets!)
+    if FOOTBALL_DATA_KEY:
+        try:
+            fd_res = requests.get(
+                f"https://football-data.org{TODAY}&dateTo={TODAY}",
+                headers={"X-Auth-Token": FOOTBALL_DATA_KEY},
+                timeout=15
+            ).json()
+            matches = fd_res.get("matches", [])
+            final_output["diagnostics"]["Football-Data"] = f"OK ({len(matches)} matches)"
+            for m in matches:
+                if m.get("status") in ["SCHEDULED", "TIMED"]:
+                    home = m.get("homeTeam", {}).get("name", "Home")
+                    away = m.get("awayTeam", {}).get("name", "Away")
+                    comp = m.get("competition", {}).get("name", "Football")
+                    utc_time = m.get("utcDate", "")
+                    final_output["picks"].append({
+                        "source": "Football-Data",
+                        "sport": f"FOOTBALL ({comp})",
+                        "match": f"{home} vs {away}",
+                        "kickoff_UTC": utc_time,
+                        "high_odds_targets": [
+                            {"market": "HT/FT Comeback (Away HT / Home FT)", "target_odd": "21.00 - 29.00"},
+                            {"market": "Exact Score Comeback (2-1 or 3-1)", "target_odd": "8.50 - 13.00"},
+                            {"market": "0-0 HT / 1-1 FT Exact Progression", "target_odd": "16.50 - 19.00"}
+                        ]
+                    })
+        except Exception as e:
+            final_output["diagnostics"]["Football-Data"] = f"Error: {e}"
 
     final_output["count"] = len(final_output["picks"])
     with open("high_odds_sports.json", "w", encoding="utf-8") as f:
         json.dump(final_output, f, indent=2)
-    print(f"Saved high_odds_sports.json with {final_output['count']} total events.")
+    print(f"Done: {final_output['count']} picks saved.")
 
 if __name__ == "__main__":
     run()
