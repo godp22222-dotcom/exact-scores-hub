@@ -1,27 +1,13 @@
 {
-  "updated_at_Nigeria": "2026-11-22 05:18 PM WAT",
-  "count": 9,
+  "updated_at_Nigeria": "2026-11-22 05:30 PM WAT",
+  "count": 7,
   "status": {
     "API-Football": "OK (0)",
-    "Sportmonks": "OK (3)",
+    "Sportmonks": "OK (1)",
     "Football-Data": "OK (3)",
     "GOAL-API": "OK (3)"
   },
   "picks": [
-    {
-      "source": "Sportmonks",
-      "match": "Liverpool vs Manchester United",
-      "kickoff_Nigeria": "2026-11-22 05:30 PM WAT",
-      "halfTimeExactScore": "unavailable",
-      "fullTimeExactScore": "unavailable"
-    },
-    {
-      "source": "Sportmonks",
-      "match": "Werder Bremen vs Hamburger SV",
-      "kickoff_Nigeria": "2026-11-22 05:30 PM WAT",
-      "halfTimeExactScore": "unavailable",
-      "fullTimeExactScore": "unavailable"
-    },
     {
       "source": "Sportmonks",
       "match": "Nordsj\u00e6lland vs FC K\u00f8benhavn",
@@ -31,22 +17,22 @@
     },
     {
       "source": "Football-Data",
-      "match": "Liverpool FC vs Manchester United FC",
-      "kickoff_Nigeria": "2026-11-22 05:30 PM WAT",
-      "halfTimeExactScore": "unavailable",
-      "fullTimeExactScore": "unavailable"
-    },
-    {
-      "source": "Football-Data",
-      "match": "SV Werder Bremen vs Hamburger SV",
-      "kickoff_Nigeria": "2026-11-22 05:30 PM WAT",
-      "halfTimeExactScore": "unavailable",
-      "fullTimeExactScore": "unavailable"
-    },
-    {
-      "source": "Football-Data",
       "match": "AC Milan vs Frosinone Calcio",
       "kickoff_Nigeria": "2026-11-22 06:00 PM WAT",
+      "halfTimeExactScore": "unavailable",
+      "fullTimeExactScore": "unavailable"
+    },
+    {
+      "source": "Football-Data",
+      "match": "CA Osasuna vs M\u00e1laga CF",
+      "kickoff_Nigeria": "2026-11-22 06:30 PM WAT",
+      "halfTimeExactScore": "unavailable",
+      "fullTimeExactScore": "unavailable"
+    },
+    {
+      "source": "Football-Data",
+      "match": "CA Paranaense vs Clube do Remo",
+      "kickoff_Nigeria": "2026-11-22 08:00 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
