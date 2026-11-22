@@ -25,7 +25,7 @@ jobs:
         run: |
           sudo bash -c 'echo -e "nameserver 8.8.8.8\nnameserver 1.1.1.1" > /etc/resolv.conf'
 
-      - name: Run fetch_scores.py and high_goals.py
+      - name: Run all exact score scripts
         env:
           API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
           FOOTBALL_DATA_KEY: ${{ secrets.FOOTBALL_DATA_KEY }}
@@ -34,11 +34,12 @@ jobs:
         run: |
           python fetch_scores.py
           python high_goals.py
+          python draws.py
 
-      - name: Commit updated scores.json and high_goals.json
+      - name: Commit updated JSON files
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add scores.json high_goals.json
-          git diff --quiet && git diff --staged --quiet || git commit -m "Update daily exact scores and high goals"
+          git config user.email "github-actions[bot]@://github.com"
+          git add scores.json high_goals.json draws.json
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update daily scores, high goals, and draws"
           git push
