@@ -1,5 +1,5 @@
 {
-  "updated_at_Nigeria": "2026-11-22 01:39 PM WAT",
+  "updated_at_Nigeria": "2026-11-22 02:42 PM WAT",
   "count": 9,
   "status": {
     "API-Football": "OK (0)",
@@ -10,43 +10,43 @@
   "picks": [
     {
       "source": "Sportmonks",
-      "match": "Horsens vs Silkeborg IF",
-      "kickoff_Nigeria": "2026-11-22 02:00 PM WAT",
-      "halfTimeExactScore": "unavailable",
-      "fullTimeExactScore": "unavailable"
-    },
-    {
-      "source": "Sportmonks",
-      "match": "Viborg FF vs Randers FC",
-      "kickoff_Nigeria": "2026-11-22 02:00 PM WAT",
-      "halfTimeExactScore": "unavailable",
-      "fullTimeExactScore": "unavailable"
-    },
-    {
-      "source": "Sportmonks",
       "match": "Hull City vs Brighton & Hove Albion",
       "kickoff_Nigeria": "2026-11-22 03:00 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
     {
-      "source": "Football-Data",
-      "match": "FC Barcelona vs Villarreal CF",
-      "kickoff_Nigeria": "2026-11-22 02:00 PM WAT",
+      "source": "Sportmonks",
+      "match": "FC Augsburg vs FSV Mainz 05",
+      "kickoff_Nigeria": "2026-11-22 03:30 PM WAT",
+      "halfTimeExactScore": "unavailable",
+      "fullTimeExactScore": "unavailable"
+    },
+    {
+      "source": "Sportmonks",
+      "match": "S\u00f8nderjyske Fodbold vs Odense BK",
+      "kickoff_Nigeria": "2026-11-22 04:00 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
     {
       "source": "Football-Data",
-      "match": "AFC Ajax vs ADO Den Haag",
-      "kickoff_Nigeria": "2026-11-22 02:30 PM WAT",
+      "match": "Hull City AFC vs Brighton & Hove Albion FC",
+      "kickoff_Nigeria": "2026-11-22 03:00 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
     {
       "source": "Football-Data",
-      "match": "Sparta Rotterdam vs AZ",
-      "kickoff_Nigeria": "2026-11-22 02:30 PM WAT",
+      "match": "Bologna FC 1909 vs Udinese Calcio",
+      "kickoff_Nigeria": "2026-11-22 03:00 PM WAT",
+      "halfTimeExactScore": "unavailable",
+      "fullTimeExactScore": "unavailable"
+    },
+    {
+      "source": "Football-Data",
+      "match": "US Sassuolo Calcio vs Genoa CFC",
+      "kickoff_Nigeria": "2026-11-22 03:00 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
