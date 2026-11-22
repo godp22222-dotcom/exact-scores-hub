@@ -1,5 +1,5 @@
 {
-  "updated_at_Nigeria": "2026-11-22 06:59 AM WAT",
+  "updated_at_Nigeria": "2026-11-22 08:05 AM WAT",
   "count": 9,
   "status": {
     "API-Football": "OK (3)",
@@ -10,24 +10,24 @@
   "picks": [
     {
       "source": "API-Football",
-      "match": "Osaka vs Kamatamare Sanuki",
-      "kickoff_Nigeria": "2026-11-22 07:00 AM WAT",
-      "halfTimeExactScore": "0 - 0",
-      "fullTimeExactScore": "1 - 0"
-    },
-    {
-      "source": "API-Football",
-      "match": "Shatin vs Eastern",
-      "kickoff_Nigeria": "2026-11-22 08:00 AM WAT",
+      "match": "Paju Citizen vs Cheonan City",
+      "kickoff_Nigeria": "2026-11-22 08:30 AM WAT",
       "halfTimeExactScore": "0 - 0",
       "fullTimeExactScore": "1 - 1"
     },
     {
       "source": "API-Football",
-      "match": "Mendiola vs Kaya",
-      "kickoff_Nigeria": "2026-11-22 08:00 AM WAT",
-      "halfTimeExactScore": "0 - 1",
-      "fullTimeExactScore": "0 - 3"
+      "match": "Seoul E-Land FC vs Asan Mugunghwa",
+      "kickoff_Nigeria": "2026-11-22 08:30 AM WAT",
+      "halfTimeExactScore": "0 - 0",
+      "fullTimeExactScore": "1 - 1"
+    },
+    {
+      "source": "API-Football",
+      "match": "Taichung Futuro vs Hang Yuen",
+      "kickoff_Nigeria": "2026-11-22 08:30 AM WAT",
+      "halfTimeExactScore": "0 - 0",
+      "fullTimeExactScore": "1 - 1"
     },
     {
       "source": "Football-Data",
