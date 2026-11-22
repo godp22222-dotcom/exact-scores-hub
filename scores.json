@@ -1,20 +1,13 @@
 {
-  "updated_at_Nigeria": "2026-11-22 09:58 AM WAT",
-  "count": 9,
+  "updated_at_Nigeria": "2026-11-22 10:25 AM WAT",
+  "count": 12,
   "status": {
     "API-Football": "OK (3)",
-    "Sportmonks": "OK (0)",
+    "Sportmonks": "OK (3)",
     "Football-Data": "OK (3)",
     "GOAL-API": "OK (3)"
   },
   "picks": [
-    {
-      "source": "API-Football",
-      "match": "Viktoria \u017di\u017ekov vs Opava",
-      "kickoff_Nigeria": "2026-11-22 10:15 AM WAT",
-      "halfTimeExactScore": "0 - 0",
-      "fullTimeExactScore": "1 - 1"
-    },
     {
       "source": "API-Football",
       "match": "Lozova vs Metalurh Zaporizhya",
@@ -28,6 +21,34 @@
       "kickoff_Nigeria": "2026-11-22 10:30 AM WAT",
       "halfTimeExactScore": "0 - 0",
       "fullTimeExactScore": "1 - 1"
+    },
+    {
+      "source": "API-Football",
+      "match": "Dagon vs Yadanarbon",
+      "kickoff_Nigeria": "2026-11-22 10:30 AM WAT",
+      "halfTimeExactScore": "unavailable",
+      "fullTimeExactScore": "unavailable"
+    },
+    {
+      "source": "Sportmonks",
+      "match": "Horsens vs Silkeborg IF",
+      "kickoff_Nigeria": "2026-11-22 02:00 PM WAT",
+      "halfTimeExactScore": "unavailable",
+      "fullTimeExactScore": "unavailable"
+    },
+    {
+      "source": "Sportmonks",
+      "match": "Viborg FF vs Randers FC",
+      "kickoff_Nigeria": "2026-11-22 02:00 PM WAT",
+      "halfTimeExactScore": "unavailable",
+      "fullTimeExactScore": "unavailable"
+    },
+    {
+      "source": "Sportmonks",
+      "match": "Hull City vs Brighton & Hove Albion",
+      "kickoff_Nigeria": "2026-11-22 03:00 PM WAT",
+      "halfTimeExactScore": "unavailable",
+      "fullTimeExactScore": "unavailable"
     },
     {
       "source": "Football-Data",
