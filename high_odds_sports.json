@@ -1,16 +1,16 @@
 {
-  "updated_at_Nigeria": "2026-11-22 04:39 PM WAT",
+  "updated_at_Nigeria": "2026-11-22 04:46 PM WAT",
   "date": "2026-11-22",
   "diagnostics": {
-    "hockey": "Error: HTTPSConnectionPool(host='api-sports.io2026-11-22', port=443): Max retries exceeded with url: / (Caused by NameResolutionError(\"HTTPSConnection(host='api-sports.io2026-11-22', port=443): Failed to resolve 'api-sports.io2026-11-22' ([Errno -2] Name or service not known)\"))",
-    "nba": "Error: HTTPSConnectionPool(host='api-sports.io2026-11-22', port=443): Max retries exceeded with url: / (Caused by NameResolutionError(\"HTTPSConnection(host='api-sports.io2026-11-22', port=443): Failed to resolve 'api-sports.io2026-11-22' ([Errno -2] Name or service not known)\"))",
-    "basketball": "Error: HTTPSConnectionPool(host='api-sports.io2026-11-22', port=443): Max retries exceeded with url: / (Caused by NameResolutionError(\"HTTPSConnection(host='api-sports.io2026-11-22', port=443): Failed to resolve 'api-sports.io2026-11-22' ([Errno -2] Name or service not known)\"))",
-    "nfl": "Error: HTTPSConnectionPool(host='api-sports.io2026-11-22', port=443): Max retries exceeded with url: / (Caused by NameResolutionError(\"HTTPSConnection(host='api-sports.io2026-11-22', port=443): Failed to resolve 'api-sports.io2026-11-22' ([Errno -2] Name or service not known)\"))",
-    "rugby": "Error: HTTPSConnectionPool(host='api-sports.io2026-11-22', port=443): Max retries exceeded with url: / (Caused by NameResolutionError(\"HTTPSConnection(host='api-sports.io2026-11-22', port=443): Failed to resolve 'api-sports.io2026-11-22' ([Errno -2] Name or service not known)\"))",
-    "volleyball": "Error: HTTPSConnectionPool(host='api-sports.io2026-11-22', port=443): Max retries exceeded with url: / (Caused by NameResolutionError(\"HTTPSConnection(host='api-sports.io2026-11-22', port=443): Failed to resolve 'api-sports.io2026-11-22' ([Errno -2] Name or service not known)\"))",
-    "baseball": "Error: HTTPSConnectionPool(host='api-sports.io2026-11-22', port=443): Max retries exceeded with url: / (Caused by NameResolutionError(\"HTTPSConnection(host='api-sports.io2026-11-22', port=443): Failed to resolve 'api-sports.io2026-11-22' ([Errno -2] Name or service not known)\"))",
-    "mma": "Error: HTTPSConnectionPool(host='api-sports.io2026-11-22', port=443): Max retries exceeded with url: / (Caused by NameResolutionError(\"HTTPSConnection(host='api-sports.io2026-11-22', port=443): Failed to resolve 'api-sports.io2026-11-22' ([Errno -2] Name or service not known)\"))",
-    "Football-Data": "Error: HTTPSConnectionPool(host='football-data.org2026-11-22&dateto=2026-11-22', port=443): Max retries exceeded with url: / (Caused by NameResolutionError(\"HTTPSConnection(host='football-data.org2026-11-22&dateto=2026-11-22', port=443): Failed to resolve 'football-data.org2026-11-22&dateto=2026-11-22' ([Errno -2] Name or service not known)\"))"
+    "hockey": "Error: Expecting value: line 1 column 1 (char 0)",
+    "nba": "Error: Expecting value: line 1 column 1 (char 0)",
+    "basketball": "Error: Expecting value: line 1 column 1 (char 0)",
+    "nfl": "Error: Expecting value: line 1 column 1 (char 0)",
+    "rugby": "Error: Expecting value: line 1 column 1 (char 0)",
+    "volleyball": "Error: Expecting value: line 1 column 1 (char 0)",
+    "baseball": "Error: Expecting value: line 1 column 1 (char 0)",
+    "mma": "Error: Expecting value: line 1 column 1 (char 0)",
+    "Football-Data": "Error: HTTPSConnectionPool(host='football-data.org', port=443): Max retries exceeded with url: /?dateFrom=2026-11-22&dateTo=2026-11-22 (Caused by SSLError(SSLCertVerificationError(1, \"[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'football-data.org'. (_ssl.c:1011)\")))"
   },
   "count": 0,
   "picks": []
