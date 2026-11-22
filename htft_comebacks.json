@@ -1,0 +1,54 @@
+{
+  "updated_at_Nigeria": "2026-11-22 05:05 PM WAT",
+  "date": "2026-11-22",
+  "markets": "1/2 (Home HT / Away FT) & 2/1 (Away HT / Home FT)",
+  "count": 5,
+  "football_picks": [],
+  "other_sports_picks": [
+    {
+      "sport": "HOCKEY",
+      "match": "Florida Everblades vs Savannah Ghost Pirates",
+      "markets": {
+        "1/2 (Home HT / Away FT)": "Check 1/2 on Football.com",
+        "2/1 (Away HT / Home FT)": "Check 2/1 on Football.com"
+      },
+      "note": "Single HOCKEY comeback target: watch halftime deficit for live 1/2 or 2/1 swing on Football.com."
+    },
+    {
+      "sport": "NBA",
+      "match": "New York Knicks vs Portland Trail Blazers",
+      "markets": {
+        "1/2 (Home HT / Away FT)": "Check 1/2 on Football.com",
+        "2/1 (Away HT / Home FT)": "Check 2/1 on Football.com"
+      },
+      "note": "Single NBA comeback target: watch halftime deficit for live 1/2 or 2/1 swing on Football.com."
+    },
+    {
+      "sport": "BASKETBALL",
+      "match": "VMI vs Gardner Webb",
+      "markets": {
+        "1/2 (Home HT / Away FT)": 10.0,
+        "2/1 (Away HT / Home FT)": 6.5
+      },
+      "note": "Single BASKETBALL comeback target: watch halftime deficit for live 1/2 or 2/1 swing on Football.com."
+    },
+    {
+      "sport": "NFL",
+      "match": "Miami vs Virginia Tech",
+      "markets": {
+        "1/2 (Home HT / Away FT)": "Check 1/2 on Football.com",
+        "2/1 (Away HT / Home FT)": "Check 2/1 on Football.com"
+      },
+      "note": "Single NFL comeback target: watch halftime deficit for live 1/2 or 2/1 swing on Football.com."
+    },
+    {
+      "sport": "RUGBY",
+      "match": "Kharebi Rustavi vs Batumi",
+      "markets": {
+        "1/2 (Home HT / Away FT)": "Check 1/2 on Football.com",
+        "2/1 (Away HT / Home FT)": "Check 2/1 on Football.com"
+      },
+      "note": "Single RUGBY comeback target: watch halftime deficit for live 1/2 or 2/1 swing on Football.com."
+    }
+  ]
+}
