@@ -7,22 +7,23 @@ APISPORTS_KEY = (
     os.environ.get("API_FOOTBALL_KEY")
     or os.environ.get("API_KEY")
 )
-SPORTMONKS_TOKEN = os.environ.get("SPORTMONKS_TOKEN")
 FOOTBALL_DATA_KEY = os.environ.get("FOOTBALL_DATA_KEY")
 
 WAT = timezone(timedelta(hours=1))
 NOW_WAT = datetime.now(WAT)
 TODAY = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
-SPORTS_CONFIG = {
-    "hockey": "https://api-sports.io",
-    "nba": "https://api-sports.io",
-    "basketball": "https://api-sports.io",
-    "nfl": "https://api-sports.io",
-    "rugby": "https://api-sports.io",
-    "volleyball": "https://api-sports.io",
-    "baseball": "https://api-sports.io",
-    "mma": "https://api-sports.io"
+# Assembled safely so browsers cannot strip subdomains or paths on copy-paste
+BASE_APISPORTS = "api-sports.io"
+SPORTS_HOSTS = {
+    "hockey": ("v1.hockey." + BASE_APISPORTS, "/games"),
+    "nba": ("v2.nba." + BASE_APISPORTS, "/games"),
+    "basketball": ("v1.basketball." + BASE_APISPORTS, "/games"),
+    "nfl": ("v1.american-football." + BASE_APISPORTS, "/games"),
+    "rugby": ("v1.rugby." + BASE_APISPORTS, "/games"),
+    "volleyball": ("v1.volleyball." + BASE_APISPORTS, "/games"),
+    "baseball": ("v1.baseball." + BASE_APISPORTS, "/games"),
+    "mma": ("v1.mma." + BASE_APISPORTS, "/fights")
 }
 
 def run():
@@ -34,12 +35,14 @@ def run():
         "picks": []
     }
 
-    # 1. Pull API-Sports multi-sport endpoints safely using params
+    # 1. Pull API-Sports multi-sport endpoints
     if APISPORTS_KEY:
         headers = {"x-apisports-key": APISPORTS_KEY}
-        for sport, url in SPORTS_CONFIG.items():
+        for sport, (host, path) in SPORTS_HOSTS.items():
+            url = "https://" + host + path
             try:
-                res = requests.get(url, headers=headers, params={"date": TODAY}, timeout=15).json()
+                r = requests.get(url, headers=headers, params={"date": TODAY}, timeout=15)
+                res = r.json()
                 errors = res.get("errors")
                 games = res.get("response", [])
                 if errors:
@@ -59,11 +62,12 @@ def run():
             except Exception as e:
                 final_output["diagnostics"][sport] = f"Error: {e}"
 
-    # 2. Pull guaranteed upcoming matches from Football-Data.org safely using params
+    # 2. Pull Football-Data.org matches
     if FOOTBALL_DATA_KEY:
+        fd_url = "https://" + "api.football-data.org" + "/v4/matches"
         try:
             fd_res = requests.get(
-                "https://football-data.org",
+                fd_url,
                 headers={"X-Auth-Token": FOOTBALL_DATA_KEY},
                 params={"dateFrom": TODAY, "dateTo": TODAY},
                 timeout=15
