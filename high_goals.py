@@ -6,7 +6,6 @@ from datetime import datetime, timezone, timedelta
 LIMIT_HIGH_GOALS = 5
 WAT_TZ = timezone(timedelta(hours=1))  # Nigeria Time (UTC+1)
 
-# Full high-goal exact score range (4+ total goals: wins & high-scoring draws)
 TARGET_HIGH_SCORES = {
     "2 - 2", "3 - 3", "4 - 4", "5 - 5",
     "4 - 0", "0 - 4",
@@ -64,7 +63,6 @@ def format_wat(raw_dt):
 
 
 def pick_best_high_score(values_list):
-    """Finds the lowest-odds scoreline among all 4+ goal wins and high-scoring draws."""
     best_odd = 9999.0
     best_score = None
     all_targets = {}
@@ -86,7 +84,6 @@ def pick_best_high_score(values_list):
                     best_odd = odd_num
                     best_score = formatted
 
-    # Sort targetOdds from lowest odd (most likely) to highest odd
     sorted_targets = dict(sorted(all_targets.items(), key=lambda item: item[1]))
     return best_score, best_odd, sorted_targets
 
@@ -103,8 +100,7 @@ def fetch_high_goal_matches():
     fixtures = get_json(host, f"/fixtures?date={today}&status=NS", hdr).get("response") or []
     candidates = []
 
-    # Scan up to 25 upcoming fixtures today to conserve API-Football daily quota
-    for item in fixtures[:25]:
+    for item in fixtures[:12]:
         wat = format_wat((item.get("fixture") or {}).get("date", ""))
         if not wat:
             continue
@@ -139,7 +135,6 @@ def fetch_high_goal_matches():
         except Exception:
             continue
 
-    # Rank matches by lowest odd (strongest high-goal probability)
     candidates.sort(key=lambda x: x["bestScoreOdd"])
     return candidates[:LIMIT_HIGH_GOALS]
 
