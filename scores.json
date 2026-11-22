@@ -1,5 +1,5 @@
 {
-  "updated_at_Nigeria": "2026-11-22 11:23 AM WAT",
+  "updated_at_Nigeria": "2026-11-22 11:33 AM WAT",
   "count": 12,
   "status": {
     "API-Football": "OK (3)",
@@ -10,24 +10,24 @@
   "picks": [
     {
       "source": "API-Football",
-      "match": "Pe\u00f1a Deportiva vs Lorca Deportiva",
-      "kickoff_Nigeria": "2026-11-22 11:30 AM WAT",
+      "match": "Grama vs Peralada",
+      "kickoff_Nigeria": "2026-11-22 11:45 AM WAT",
       "halfTimeExactScore": "0 - 0",
-      "fullTimeExactScore": "1 - 1"
+      "fullTimeExactScore": "1 - 0"
     },
     {
       "source": "API-Football",
-      "match": "Getafe II vs RSD Alcal\u00e1",
-      "kickoff_Nigeria": "2026-11-22 11:30 AM WAT",
+      "match": "Dinamo Samarqand vs Bunyodkor",
+      "kickoff_Nigeria": "2026-11-22 12:00 PM WAT",
       "halfTimeExactScore": "0 - 0",
-      "fullTimeExactScore": "1 - 1"
+      "fullTimeExactScore": "2 - 1"
     },
     {
       "source": "API-Football",
-      "match": "Erzurumspor FK vs G\u00f6ztepe",
-      "kickoff_Nigeria": "2026-11-22 11:30 AM WAT",
+      "match": "Arsenal vs Neman",
+      "kickoff_Nigeria": "2026-11-22 12:00 PM WAT",
       "halfTimeExactScore": "0 - 0",
-      "fullTimeExactScore": "1 - 1"
+      "fullTimeExactScore": "0 - 1"
     },
     {
       "source": "Sportmonks",
