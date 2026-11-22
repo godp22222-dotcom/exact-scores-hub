@@ -136,11 +136,21 @@ def fetch_sportmonks():
     if not tok:
         raise ValueError("Missing SPORTMONKS_TOKEN")
     host = ".".join(["api", "sportmonks", "com"])
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    # Try with predictions first; fallback to participants only if free plan blocks predictions
     data = get_json(
         host,
-        f"/v3/football/fixtures?api_token={quote(tok, safe='')}&include=participants;predictions&filters=fixtureStates:1&per_page=10"
+        f"/v3/football/fixtures/date/{today}?api_token={quote(tok, safe='')}&include=participants;predictions&per_page=25"
     )
     fixtures = data.get("data") or []
+    if not fixtures:
+        data = get_json(
+            host,
+            f"/v3/football/fixtures/date/{today}?api_token={quote(tok, safe='')}&include=participants&per_page=25"
+        )
+        fixtures = data.get("data") or []
+
     out = []
     for f in fixtures:
         if len(out) >= LIMIT_PER_API:
@@ -174,6 +184,7 @@ def fetch_sportmonks():
             "fullTimeExactScore": ft_score
         })
     return out
+
 
 
 # 3. FOOTBALL-DATA.ORG
