@@ -1,6 +1,97 @@
 {
-  "updated_at_Nigeria": "2026-11-23 09:56 PM WAT",
-  "status": "OK (0)",
-  "count": 0,
-  "picks": []
+  "updated_at_Nigeria": "2026-11-23 10:01 PM WAT",
+  "status": "OK (5)",
+  "count": 5,
+  "picks": [
+    {
+      "league": "Football",
+      "match": "SC Internacional vs EC Vit\u00f3ria",
+      "kickoff_Nigeria": "2026-11-23 11:30 PM WAT",
+      "premium_exact_score": "1 - 1",
+      "bestDrawExactScore": "1 - 1",
+      "bestDrawOdd": 6.34,
+      "drawOdds": {
+        "1 - 1": 6.34,
+        "0 - 0": 7.96,
+        "2 - 2": 11.7,
+        "3 - 3": 47.12,
+        "4 - 4": 178.75,
+        "5 - 5": 487.5,
+        "6 - 6": 1137.5,
+        "7 - 7": 2437.5
+      }
+    },
+    {
+      "league": "Football",
+      "match": "Botafogo FR vs S\u00e3o Paulo FC",
+      "kickoff_Nigeria": "2026-11-24 12:00 AM WAT",
+      "premium_exact_score": "1 - 1",
+      "bestDrawExactScore": "1 - 1",
+      "bestDrawOdd": 6.34,
+      "drawOdds": {
+        "1 - 1": 6.34,
+        "0 - 0": 7.96,
+        "2 - 2": 11.7,
+        "3 - 3": 47.12,
+        "4 - 4": 178.75,
+        "5 - 5": 487.5,
+        "6 - 6": 1137.5,
+        "7 - 7": 2437.5
+      }
+    },
+    {
+      "league": "Football",
+      "match": "Santos FC vs Gr\u00eamio FBPA",
+      "kickoff_Nigeria": "2026-11-24 01:00 AM WAT",
+      "premium_exact_score": "1 - 1",
+      "bestDrawExactScore": "1 - 1",
+      "bestDrawOdd": 6.34,
+      "drawOdds": {
+        "1 - 1": 6.34,
+        "0 - 0": 7.96,
+        "2 - 2": 11.7,
+        "3 - 3": 47.12,
+        "4 - 4": 178.75,
+        "5 - 5": 487.5,
+        "6 - 6": 1137.5,
+        "7 - 7": 2437.5
+      }
+    },
+    {
+      "league": "Football",
+      "match": "Slovakia W vs Bulgaria W",
+      "kickoff_Nigeria": "2027-06-15 04:00 PM WAT",
+      "premium_exact_score": "1 - 1",
+      "bestDrawExactScore": "1 - 1",
+      "bestDrawOdd": 6.34,
+      "drawOdds": {
+        "1 - 1": 6.34,
+        "0 - 0": 7.96,
+        "2 - 2": 11.7,
+        "3 - 3": 47.12,
+        "4 - 4": 178.75,
+        "5 - 5": 487.5,
+        "6 - 6": 1137.5,
+        "7 - 7": 2437.5
+      }
+    },
+    {
+      "league": "Football",
+      "match": "Spain W vs Switzerland W",
+      "kickoff_Nigeria": "2027-06-15 04:00 PM WAT",
+      "premium_exact_score": "1 - 1",
+      "bestDrawExactScore": "1 - 1",
+      "bestDrawOdd": 6.34,
+      "drawOdds": {
+        "1 - 1": 6.34,
+        "0 - 0": 7.96,
+        "2 - 2": 11.7,
+        "3 - 3": 47.12,
+        "4 - 4": 178.75,
+        "5 - 5": 487.5,
+        "6 - 6": 1137.5,
+        "7 - 7": 2437.5
+      }
+    }
+  ]
 }
