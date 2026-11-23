@@ -1,34 +1,13 @@
 {
-  "updated_at_Nigeria": "2026-11-23 01:05 PM WAT",
-  "count": 11,
+  "updated_at_Nigeria": "2026-11-23 01:57 PM WAT",
+  "count": 8,
   "status": {
-    "API-Football": "OK (3)",
+    "API-Football": "OK (0)",
     "Sportmonks": "OK (2)",
     "Football-Data": "OK (3)",
     "GOAL-API": "OK (3)"
   },
   "picks": [
-    {
-      "source": "API-Football",
-      "match": "Spain U17 vs Fiji U17",
-      "kickoff_Nigeria": "2026-11-23 01:30 PM WAT",
-      "halfTimeExactScore": "unavailable",
-      "fullTimeExactScore": "unavailable"
-    },
-    {
-      "source": "API-Football",
-      "match": "Tajikistan U17 vs Croatia U17",
-      "kickoff_Nigeria": "2026-11-23 01:30 PM WAT",
-      "halfTimeExactScore": "unavailable",
-      "fullTimeExactScore": "unavailable"
-    },
-    {
-      "source": "API-Football",
-      "match": "CSKA Sofia II vs Beroe",
-      "kickoff_Nigeria": "2026-11-23 01:30 PM WAT",
-      "halfTimeExactScore": "0 - 0",
-      "fullTimeExactScore": "1 - 0"
-    },
     {
       "source": "Sportmonks",
       "match": "Br\u00f8ndby IF vs FC Midtjylland",

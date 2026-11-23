@@ -1,5 +1,5 @@
 {
-  "updated_at_Nigeria": "2026-11-23 01:05 PM WAT",
+  "updated_at_Nigeria": "2026-11-23 01:57 PM WAT",
   "date": "2026-11-23",
   "count": 4,
   "football_picks": [
@@ -16,25 +16,25 @@
       ]
     },
     {
-      "competition": "Primera Division",
-      "match": "Levante UD vs Elche CF",
+      "competition": "Premier League",
+      "match": "Brentford FC vs Everton FC",
       "kickoff_UTC": "2026-11-23T20:00:00Z",
       "recommended_pick": "1/2 (Home HT / Away FT)",
       "target_odd": 23.0,
       "notes": [
-        "Select 1/2: Back Levante UD to grab an early first-half edge before Elche CF's quality takes over after the break.",
+        "Select 1/2: Back Brentford FC to grab an early first-half edge before Everton FC's quality takes over after the break.",
         "Second-Half Trigger: Best value comes when halftime finishes 0-1 or 1-0 with the trailing side controlling shots.",
         "Stake Rule: Play as a single on Football.com under Half-Time / Full-Time."
       ]
     },
     {
-      "competition": "Premier League",
-      "match": "Brentford FC vs Everton FC",
+      "competition": "Primera Division",
+      "match": "Levante UD vs Elche CF",
       "kickoff_UTC": "2026-11-23T20:00:00Z",
       "recommended_pick": "2/1 (Away HT / Home FT)",
       "target_odd": 24.0,
       "notes": [
-        "Select 2/1: Back Everton FC to strike first before Brentford FC dominate the second half for a home turnaround.",
+        "Select 2/1: Back Elche CF to strike first before Levante UD dominate the second half for a home turnaround.",
         "Second-Half Trigger: Best value comes when halftime finishes 0-1 or 1-0 with the trailing side controlling shots.",
         "Stake Rule: Play as a single on Football.com under Half-Time / Full-Time."
       ]
