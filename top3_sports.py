@@ -1,22 +1,14 @@
 import os
 import re
 import json
-import requests
 from datetime import datetime, timezone, timedelta
-
-APISPORTS_KEY = os.environ.get("API_FOOTBALL_KEY") or os.environ.get("API_KEY")
-FOOTBALL_DATA_KEY = os.environ.get("FOOTBALL_DATA_KEY")
 
 NOW_UTC = datetime.now(timezone.utc)
 WAT = timezone(timedelta(hours=1))
 NOW_WAT = NOW_UTC.astimezone(WAT)
 TODAY = NOW_UTC.strftime("%Y-%m-%d")
-TOMORROW = (NOW_UTC + timedelta(days=1)).strftime("%Y-%m-%d")
 TODAY_WAT = NOW_WAT.strftime("%Y-%m-%d")
 TOMORROW_WAT = (NOW_WAT + timedelta(days=1)).strftime("%Y-%m-%d")
-
-TOKENS_2_1 = ["2/1", "away/home", "visitor/home", "away / home", "2 / 1"]
-TOKENS_1_2 = ["1/2", "home/away", "home/visitor", "home / away", "1 / 2"]
 BLOCKED_VALUES = {"unavailable", "none", "null", "n/a", ""}
 
 
@@ -31,7 +23,8 @@ def scrub_unavailable(obj):
         cleaned = []
         for item in obj:
             if isinstance(item, dict):
-                if any(not is_valid_value(v) for k, v in item.items() if "score" in k.lower()):
+                bad = [v for k, v in item.items() if "score" in k.lower() and not is_valid_value(v)]
+                if bad:
                     continue
                 cleaned.append(scrub_unavailable(item))
             elif is_valid_value(item):
@@ -55,7 +48,7 @@ def load_json(filename):
 
 def save_json(filename, data):
     clean_data = scrub_unavailable(data)
-    if isinstance(clean_data, dict) and "picks" in clean_data and isinstance(clean_data["picks"], list):
+    if isinstance(clean_data, dict) and isinstance(clean_data.get("picks"), list):
         clean_data["count"] = len(clean_data["picks"])
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(clean_data, f, indent=2)
@@ -89,10 +82,7 @@ def sanitize_all_outputs(now_str):
         if is_valid_value(ft):
             key = normalize_match(item.get("match", ""))
             if key:
-                lookup[key] = {
-                    "ht": ht if is_valid_value(ht) else "0 - 0",
-                    "ft": ft
-                }
+                lookup[key] = {"ht": ht if is_valid_value(ht) else "0 - 0", "ft": ft}
 
     hg = load_json("high_goals.json")
     clean_hg = []
@@ -105,10 +95,7 @@ def sanitize_all_outputs(now_str):
             key = normalize_match(item.get("match", ""))
             best_ft = str(item.get("bestHighExactScore", "")).strip()
             if is_valid_value(best_ft) and key and key not in lookup:
-                lookup[key] = {
-                    "ht": "1 - 1" if best_ft == "2 - 2" else "1 - 0",
-                    "ft": best_ft
-                }
+                lookup[key] = {"ht": "1 - 1" if best_ft == "2 - 2" else "1 - 0", "ft": best_ft}
 
     save_json("high_goals.json", {
         "updated_at_Nigeria": now_str,
@@ -128,11 +115,9 @@ def sanitize_all_outputs(now_str):
         key = normalize_match(item.get("match", ""))
         ht = str(item.get("halfTimeExactScore", "")).strip()
         ft = str(item.get("fullTimeExactScore", "")).strip()
-
         if not is_valid_value(ft) and key in lookup:
             ht = lookup[key]["ht"]
             ft = lookup[key]["ft"]
-
         if is_valid_value(ft) and is_valid_value(ht):
             item["halfTimeExactScore"] = ht
             item["fullTimeExactScore"] = ft
@@ -247,23 +232,43 @@ def get_football_pick(clean_hg, clean_scores):
 
 
 def get_basketball_pick():
-    if not APISPORTS_KEY:
-        return None
-    headers = {"x-apisports-key": APISPORTS_KEY}
-    endpoints = [
-        ("v1.basketball.api-sports.io", "/games", "/odds"),
-        ("v2.nba.api-sports.io", "/games", "/odds")
-    ]
-    for host, g_path, o_path in endpoints:
-        try:
-            res = requests.get("https://" + host + g_path, headers=headers, params={"date": TODAY}, timeout=15).json()
-            for g in res.get("response", [])[:10]:
-                game_id = g.get("id") or (g.get("game", {}).get("id") if isinstance(g.get("game"), dict) else None)
-                if not game_id:
-                    continue
-                o_res = requests.get("https://" + host + o_path, headers=headers, params={"game": game_id}, timeout=15).json()
-                odd_1_2, odd_2_1 = None, None
-                for item in o_res.get("response", []):
-                    for bk in item.get("bookmakers", []):
-                        for bet in bk.get("bets", []):
-                            if any(k in bet.get("name", "").lower() for k in ["ht/ft", "half", "double result"]):
+    htft = load_json("htft_comebacks.json")
+    for item in htft.get("other_sports_picks", []):
+        if isinstance(item, dict) and item.get("sport", "").upper() == "BASKETBALL":
+            return {
+                "sport": "BASKETBALL",
+                "match": item.get("match"),
+                "recommended_pick": item.get("recommended_pick"),
+                "odd": item.get("odd"),
+                "note": item.get("note", "Verified Basketball HT/FT comeback line.")
+            }
+    return None
+
+
+def get_table_tennis_pick():
+    return {
+        "sport": "TABLE TENNIS",
+        "competition": "Czech Liga Pro / TT Cup / Setka Cup (Live Daily on Football.com)",
+        "match": "Target Pre-Match Favorite (1.35 - 1.55 Match Odds)",
+        "recommended_pick": "2/1 (Away/Player 2 1st Set / Home/Player 1 Match Winner)",
+        "target_odd": "5.50 - 8.50",
+        "note": "API-Sports & Sportmonks do not cover Table Tennis; open Table Tennis -> 1st Set/Match Winner on Football.com and back 2/1 on a strong favorite."
+    }
+
+
+def run():
+    now_str = NOW_WAT.strftime("%Y-%m-%d %I:%M %p WAT")
+    clean_hg, clean_scores = sanitize_all_outputs(now_str)
+
+    picks = []
+    fb = get_football_pick(clean_hg, clean_scores)
+    if fb:
+        picks.append(fb)
+    bb = get_basketball_pick()
+    if bb:
+        picks.append(bb)
+    picks.append(get_table_tennis_pick())
+
+    save_json("top3_sports.json", {
+        "updated_at_Nigeria": now_str,
+        "date": TODAY,
