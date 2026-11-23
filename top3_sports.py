@@ -1,1 +1,67 @@
-import base64; exec(base64.b64decode("aW1wb3J0IG9zLCByZSwganNvbgpmcm9tIGRhdGV0aW1lIGltcG9ydCBkYXRldGltZSwgdGltZXpvbmUsIHRpbWVkZWx0YQoKTlk9ZGF0ZXRpbWUubm93KHRpbWV6b25lLnV0YykKV0FUPXRpbWV6b25lKHRpbWVkZWx0YShob3Vycz0xKSkKTlc9TlkuYXN0aW1lem9uZShXQVQpClREPVlEPU5ZLnN0cmZ0aW1lKCIlWS0lbS0lZCIpClRXPU5XLnN0cmZ0aW1lKCIlWS0lbS0lZCIpClRNVy0oTlcrdGltZWRlbHRhKGRheXM9MSkpLnN0cmZ0aW1lKCIlWS0lbS0lZCIpCkJMVD17InVuYXZhaWxhYmxlIiwibm9uZSIsIm51bGwiLCJuL2EiLCIifQoKZGVmIG9rKHYpOiByZXR1cm4gdiBpcyBub3QgTm9uZSBhbmQgc3RyKHYpLnN0cmlwKCkubG93ZXIoKSBub3QgaW4gQkxUCgpkZWYgc2NyKG8pOgogICAgaWYgaXNpbnN0YW5jZShvLGxpc3QpOgogICAgICAgIHJbXT00CiAgICAgICAgZm9yIGkgaW4gbzoKICAgICAgICAgICAgaWYgaXNpbnN0YW5jZShpLGRpY3QpOgogICAgICAgICAgICAgICAgaWYgYW55KG5vdCBvayh2KSBmb3Igayx2IGluIGkuaXRlbXMoKSBpZiAic2NvcmUiIGluIGsubG93ZXIoKSk6IGNvbnRpbnVlCiAgICAgICAgICAgICAgICByLmFwcGVuZChzY3IoaSkpCiAgICAgICAgICAgIGVsaWYgb2soaSk6IHIuYXBwZW5kKGkpCiAgICAgICAgcmV0dXJuIHIKICAgIGlmIGlzaW5zdGFuY2UobyxkaWN0KTogcmV0dXJuIHtrOnNjcih2KSBmb3Igayx2IGluIG8uaXRlbXMoKSBpZiBvayh2KX0KICAgIHJldHVybiBvCg=="))
+from datetime import datetime, timedelta, timezone
+import json
+import os
+import requests  # Make sure 'requests' is in your requirements.txt
+
+# 1. Timezone & Date Setup (WAT / Africa/Lagos)
+NY = datetime.now(timezone.utc)
+WAT = timezone(timedelta(hours=1))
+NW = NY.astimezone(WAT)
+
+TD = NY.strftime("%Y-%m-%d")
+YD = (NY - timedelta(days=1)).strftime("%Y-%m-%d")
+TW = NW.strftime("%Y-%m-%d")
+TMW = (NW + timedelta(days=1)).strftime("%Y-%m-%d")
+
+BLT = {"unavailable", "none", "null", "n/a", ""}
+
+
+# 2. Data Cleaning Helpers (Filters out invalid/missing scores)
+def ok(v):
+  return v is not None and str(v).strip().lower() not in BLT
+
+
+def scr(o):
+  if isinstance(o, list):
+    r = []
+    for i in o:
+      if isinstance(i, dict):
+        if any(not ok(v) for k, v in i.items() if "score" in k.lower()):
+          continue
+        r.append(scr(i))
+      elif ok(i):
+        r.append(i)
+    return r
+  if isinstance(o, dict):
+    return {k: scr(v) for k, v in o.items() if ok(v)}
+  return o
+
+
+# 3. Fetch Your Exact Score Data
+# Replace API_URL and HEADERS with your actual sports API endpoint (e.g., Sportmonks)
+API_URL = "YOUR_API_ENDPOINT_HERE"
+HEADERS = {"Authorization": os.getenv("API_TOKEN", "")}
+
+response = requests.get(API_URL, headers=HEADERS, timeout=30)
+response.raise_for_status()
+raw_data = response.json()
+
+# 4. Clean & Package Output
+cleaned_matches = scr(raw_data)
+
+output_payload = {
+    "updated_at": NW.strftime("%Y-%m-%d %H:%M:%S WAT"),
+    "date": TW,
+    "top3_exact_scores": (
+        cleaned_matches[:3]
+        if isinstance(cleaned_matches, list)
+        else cleaned_matches
+    ),
+}
+
+# 5. Save to outputs/top3_sports.json
+os.makedirs("outputs", exist_ok=True)
+with open("outputs/top3_sports.json", "w", encoding="utf-8") as f:
+  json.dump(output_payload, f, indent=2)
+
+print("Successfully updated outputs/top3_sports.json")
