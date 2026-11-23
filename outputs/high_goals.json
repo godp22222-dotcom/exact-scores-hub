@@ -1,46 +1,6 @@
 {
-  "updated_at_Nigeria": "2026-11-23 12:44 PM WAT",
-  "status": "OK (2)",
-  "count": 2,
-  "picks": [
-    {
-      "league": "Third League - Northeast",
-      "match": "Cherno more II vs Fratria II",
-      "kickoff_Nigeria": "2026-11-23 01:00 PM WAT",
-      "bestHighExactScore": "4 - 0",
-      "bestScoreOdd": 9.65,
-      "targetOdds": {
-        "4 - 0": 9.65,
-        "3 - 2": 10.0,
-        "4 - 1": 10.0,
-        "2 - 2": 10.0,
-        "5 - 0": 10.0,
-        "5 - 1": 10.0
-      }
-    },
-    {
-      "league": "First League",
-      "match": "Shkendija vs Sileks",
-      "kickoff_Nigeria": "2026-11-23 01:00 PM WAT",
-      "bestHighExactScore": "2 - 2",
-      "bestScoreOdd": 15.0,
-      "targetOdds": {
-        "2 - 2": 15.0,
-        "3 - 2": 26.0,
-        "4 - 0": 36.0,
-        "4 - 1": 36.0,
-        "2 - 3": 41.0,
-        "3 - 3": 66.0,
-        "4 - 2": 66.0,
-        "5 - 0": 81.0,
-        "1 - 4": 91.0,
-        "5 - 1": 91.0,
-        "0 - 4": 101.0,
-        "2 - 4": 101.0,
-        "0 - 5": 151.0,
-        "1 - 5": 151.0,
-        "4 - 4": 151.0
-      }
-    }
-  ]
+  "updated_at_Nigeria": "2026-11-23 01:01 PM WAT",
+  "status": "OK (0)",
+  "count": 0,
+  "picks": []
 }
