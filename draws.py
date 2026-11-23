@@ -6,6 +6,8 @@ import time
 
 LIMIT_DRAWS = 5
 WAT_TZ = timezone(timedelta(hours=1))  # Nigeria Time (UTC+1)
+PREMIER_LEAGUE_ID = 39
+OTHER_TOP_LEAGUES = (140, 135, 78, 2)  # La Liga, Serie A, Bundesliga, UCL
 
 
 def resolve_ip(host):
@@ -66,9 +68,7 @@ def format_wat(raw_dt):
     dt_utc = datetime.fromisoformat(clean)
     if dt_utc.tzinfo is None:
       dt_utc = dt_utc.replace(tzinfo=timezone.utc)
-    now_utc = datetime.now(timezone.utc)
-    # Only allow matches kicking off within the next 48 hours
-    if dt_utc <= now_utc or dt_utc > now_utc + timedelta(hours=48):
+    if dt_utc <= datetime.now(timezone.utc):
       return None
     return dt_utc.astimezone(WAT_TZ).strftime("%Y-%m-%d %I:%M %p WAT")
   except Exception:
@@ -90,14 +90,14 @@ def pick_best_draw(values_list):
     parts = val_str.split("-")
     if len(parts) == 2 and all(p.strip().isdigit() for p in parts):
       hg, ag = map(int, parts)
-      if hg == ag:  # 0-0, 1-1, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7+
+      if hg == ag:  # 0-0, 1-1, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7 and above
         formatted = f"{hg} - {ag}"
         draw_odds[formatted] = odd_num
         if odd_num < best_odd:
           best_odd = odd_num
           best_score = formatted
 
-  sorted_draws = dict(sorted(draw_odds.items(), key=lambda item: item[1]))
+  sorted_draws = dict(sorted(draw_odds.items(), key=lambda item: item))
   return best_score, best_odd, sorted_draws
 
 
@@ -108,55 +108,87 @@ def fetch_draw_matches():
 
   host = ".".join(["v3", "football", "api-sports", "io"])
   hdr = {"x-apisports-key": key}
-
-  now_utc = datetime.now(timezone.utc)
-  today = now_utc.strftime("%Y-%m-%d")
-  tomorrow = (now_utc + timedelta(days=1)).strftime("%Y-%m-%d")
+  today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
   fixtures = []
-  for check_date in [today, tomorrow]:
-    resp = (
-        get_json(host, f"/fixtures?date={check_date}&status=NS", hdr).get(
-            "response"
-        )
+  seen_ids = set()
+
+  # 1. Always fetch upcoming Premier League fixtures first
+  try:
+    epl_fix = (
+        get_json(
+            host, f"/fixtures?league={PREMIER_LEAGUE_ID}&status=NS&next=5", hdr
+        ).get("response")
         or []
     )
-    upcoming = [
-        f
-        for f in resp
-        if format_wat((f.get("fixture") or {}).get("date", "")) is not None
-    ]
-    if upcoming:
-      fixtures.extend(upcoming)
-    if len(fixtures) >= 15:
-      break
+    for f in epl_fix:
+      fid = (f.get("fixture") or {}).get("id")
+      if fid and fid not in seen_ids:
+        seen_ids.add(fid)
+        fixtures.append(f)
+  except Exception:
+    pass
+
+  # 2. Add today's unstarted fixtures
+  try:
+    today_fix = (
+        get_json(host, f"/fixtures?date={today}&status=NS", hdr).get("response")
+        or []
+    )
+    for f in today_fix:
+      fid = (f.get("fixture") or {}).get("id")
+      if (
+          fid
+          and fid not in seen_ids
+          and format_wat((f.get("fixture") or {}).get("date", "")) is not None
+      ):
+        seen_ids.add(fid)
+        fixtures.append(f)
+  except Exception:
+    pass
+
+  # 3. Fill remaining slots with top European leagues if needed
+  if len(fixtures) < 8:
+    for lg in OTHER_TOP_LEAGUES:
+      try:
+        lg_fix = (
+            get_json(host, f"/fixtures?league={lg}&status=NS&next=2", hdr).get(
+                "response"
+            )
+            or []
+        )
+        for f in lg_fix:
+          fid = (f.get("fixture") or {}).get("id")
+          if fid and fid not in seen_ids:
+            seen_ids.add(fid)
+            fixtures.append(f)
+        if len(fixtures) >= 8:
+          break
+      except Exception:
+        continue
 
   candidates = []
-
-  # Check up to 8 fixtures with a short delay to stay safely within free-tier rate limits
   for item in fixtures[:8]:
     wat = format_wat((item.get("fixture") or {}).get("date", ""))
     if not wat:
       continue
 
     fix_id = (item.get("fixture") or {}).get("id")
-    league = (item.get("league") or {}).get("name", "Football")
+    league = (item.get("league") or {}).get("name", "Premier League")
     teams = item.get("teams") or {}
     home = (teams.get("home") or {}).get("name", "Home")
     away = (teams.get("away") or {}).get("name", "Away")
 
     try:
-      # Directly query bet=10 (Exact Score) for real bookmaker odds
       odds_resp = (
           get_json(host, f"/odds?fixture={fix_id}&bet=10", hdr).get("response")
           or []
       )
-      if not odds_resp or not isinstance(odds_resp, list):
-        time.sleep(0.7)
+      if not odds_resp:
+        time.sleep(0.6)
         continue
 
-      first_entry = odds_resp[0] if isinstance(odds_resp[0], dict) else {}
-      bms = first_entry.get("bookmakers") or []
+      bms = next(iter(odds_resp), {}).get("bookmakers") or []
       best_score = None
       best_odd = 9999.0
       draw_odds = {}
@@ -177,9 +209,8 @@ def fetch_draw_matches():
             "bestDrawOdd": best_odd,
             "drawOdds": draw_odds,
         })
-      time.sleep(0.7)
+      time.sleep(0.6)
     except Exception:
-      time.sleep(0.7)
       continue
 
   candidates.sort(key=lambda x: x["bestDrawOdd"])
