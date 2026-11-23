@@ -1,40 +1,40 @@
 {
-  "updated_at_Nigeria": "2026-11-23 10:17 PM WAT",
+  "updated_at_Nigeria": "2026-11-23 10:27 PM WAT",
   "date": "2026-11-23",
   "count": 3,
   "football_picks": [
     {
-      "competition": "Serie A",
-      "match": "AC Monza vs ACF Fiorentina",
-      "kickoff_UTC": "2026-11-23T19:45:00Z",
+      "competition": "Campeonato Brasileiro S\u00e9rie A",
+      "match": "SC Internacional vs EC Vit\u00f3ria",
+      "kickoff_UTC": "2026-11-23T22:30:00Z",
       "recommended_pick": "2/1 (Away HT / Home FT)",
       "target_odd": 24.0,
       "notes": [
-        "Select 2/1: Back ACF Fiorentina to strike first before AC Monza dominate the second half for a home turnaround.",
+        "Select 2/1: Back EC Vit\u00f3ria to strike first before SC Internacional dominate the second half for a home turnaround.",
         "Second-Half Trigger: Best value comes when halftime finishes 0-1 or 1-0 with the trailing side controlling shots.",
         "Stake Rule: Play as a single on Football.com under Half-Time / Full-Time."
       ]
     },
     {
-      "competition": "Premier League",
-      "match": "Brentford FC vs Everton FC",
-      "kickoff_UTC": "2026-11-23T20:00:00Z",
+      "competition": "Campeonato Brasileiro S\u00e9rie A",
+      "match": "Botafogo FR vs S\u00e3o Paulo FC",
+      "kickoff_UTC": "2026-11-23T23:00:00Z",
       "recommended_pick": "1/2 (Home HT / Away FT)",
       "target_odd": 23.0,
       "notes": [
-        "Select 1/2: Back Brentford FC to grab an early first-half edge before Everton FC's quality takes over after the break.",
+        "Select 1/2: Back Botafogo FR to grab an early first-half edge before S\u00e3o Paulo FC's quality takes over after the break.",
         "Second-Half Trigger: Best value comes when halftime finishes 0-1 or 1-0 with the trailing side controlling shots.",
         "Stake Rule: Play as a single on Football.com under Half-Time / Full-Time."
       ]
     },
     {
-      "competition": "Primera Division",
-      "match": "Levante UD vs Elche CF",
-      "kickoff_UTC": "2026-11-23T20:00:00Z",
+      "competition": "Campeonato Brasileiro S\u00e9rie A",
+      "match": "Santos FC vs Gr\u00eamio FBPA",
+      "kickoff_UTC": "2026-11-24T00:00:00Z",
       "recommended_pick": "2/1 (Away HT / Home FT)",
       "target_odd": 24.0,
       "notes": [
-        "Select 2/1: Back Elche CF to strike first before Levante UD dominate the second half for a home turnaround.",
+        "Select 2/1: Back Gr\u00eamio FBPA to strike first before Santos FC dominate the second half for a home turnaround.",
         "Second-Half Trigger: Best value comes when halftime finishes 0-1 or 1-0 with the trailing side controlling shots.",
         "Stake Rule: Play as a single on Football.com under Half-Time / Full-Time."
       ]
