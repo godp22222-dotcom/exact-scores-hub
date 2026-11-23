@@ -71,8 +71,9 @@ def parse_score(score_str):
     if not isinstance(score_str, str) or "-" not in score_str:
         return None
     parts = [p.strip() for p in score_str.split("-")]
-    if len(parts) == 2 and parts.isdigit() and parts.isdigit():
-        return int(parts), int(parts)
+    if len(parts) == 2 and all(p.isdigit() for p in parts):
+        nums = tuple(int(p) for p in parts)
+        return nums
     return None
 
 
@@ -153,7 +154,7 @@ def sanitize_all_outputs(now_str):
         seen = set()
         for item in clean_hg:
             parsed = parse_score(item.get("bestHighExactScore", ""))
-            if parsed and parsed == parsed:
+            if parsed and len(set(parsed)) == 1:
                 key = normalize_match(item.get("match", ""))
                 if key not in seen:
                     seen.add(key)
@@ -166,7 +167,7 @@ def sanitize_all_outputs(now_str):
                     })
         for item in clean_scores:
             parsed = parse_score(item.get("fullTimeExactScore", ""))
-            if parsed and parsed == parsed:
+            if parsed and len(set(parsed)) == 1:
                 key = normalize_match(item.get("match", ""))
                 if key not in seen:
                     seen.add(key)
@@ -188,7 +189,7 @@ def sanitize_all_outputs(now_str):
     if not ht_picks:
         for item in clean_scores:
             parsed_ht = parse_score(item.get("halfTimeExactScore", ""))
-            if parsed_ht and (parsed_ht + parsed_ht) >= 1:
+            if parsed_ht and sum(parsed_ht) >= 1:
                 ht_picks.append({
                     "source": item.get("source"),
                     "match": item.get("match"),
@@ -206,41 +207,41 @@ def sanitize_all_outputs(now_str):
 
 
 def get_football_pick(clean_hg, clean_scores):
-    if clean_hg:
-        top = clean_hg
+    top_hg = next(iter(clean_hg), None)
+    if top_hg:
         return {
             "sport": "FOOTBALL",
             "tier": "PREMIUM EXACT SCORE",
-            "competition": top.get("league"),
-            "match": top.get("match"),
-            "kickoff_Nigeria": top.get("kickoff_Nigeria"),
-            "bestHighExactScore": top.get("bestHighExactScore"),
-            "odd": top.get("bestScoreOdd")
+            "competition": top_hg.get("league"),
+            "match": top_hg.get("match"),
+            "kickoff_Nigeria": top_hg.get("kickoff_Nigeria"),
+            "bestHighExactScore": top_hg.get("bestHighExactScore"),
+            "odd": top_hg.get("bestScoreOdd")
         }
 
-    if clean_scores:
-        top = clean_scores
+    top_sc = next(iter(clean_scores), None)
+    if top_sc:
         return {
             "sport": "FOOTBALL",
             "tier": "PREMIUM EXACT SCORE",
-            "source": top.get("source"),
-            "match": top.get("match"),
-            "kickoff_Nigeria": top.get("kickoff_Nigeria"),
-            "halfTimeExactScore": top.get("halfTimeExactScore"),
-            "fullTimeExactScore": top.get("fullTimeExactScore")
+            "source": top_sc.get("source"),
+            "match": top_sc.get("match"),
+            "kickoff_Nigeria": top_sc.get("kickoff_Nigeria"),
+            "halfTimeExactScore": top_sc.get("halfTimeExactScore"),
+            "fullTimeExactScore": top_sc.get("fullTimeExactScore")
         }
 
     htft = load_json("htft_comebacks.json")
     fb_picks = [p for p in htft.get("football_picks", []) if isinstance(p, dict)]
-    if fb_picks:
-        top = fb_picks
+    top_fb = next(iter(fb_picks), None)
+    if top_fb:
         return {
             "sport": "FOOTBALL",
             "tier": "PREMIUM EXACT SCORE",
-            "competition": top.get("competition"),
-            "match": top.get("match"),
-            "kickoff_UTC": top.get("kickoff_UTC"),
-            "odd": top.get("target_odd")
+            "competition": top_fb.get("competition"),
+            "match": top_fb.get("match"),
+            "kickoff_UTC": top_fb.get("kickoff_UTC"),
+            "odd": top_fb.get("target_odd")
         }
 
     if FOOTBALL_DATA_KEY:
@@ -251,19 +252,17 @@ def get_football_pick(clean_hg, clean_scores):
                 params={"dateFrom": TODAY, "dateTo": TOMORROW},
                 timeout=15
             ).json()
-            upcoming = []
+            earliest_ts = None
+            earliest_match = None
             for m in fd_res.get("matches", []):
                 utc_str = m.get("utcDate", "")
                 if m.get("status") in ["SCHEDULED", "TIMED"] and utc_str:
                     k_dt = datetime.fromisoformat(utc_str.replace("Z", "+00:00"))
                     if k_dt > NOW_UTC:
-                        upcoming.append((k_dt.timestamp(), m))
-            upcoming.sort(key=lambda x: x)
-            if upcoming:
-                _, m = upcoming
-                home = m.get("homeTeam", {}).get("name", "Home")
-                away = m.get("awayTeam", {}).get("name", "Away")
-                comp = m.get("competition", {}).get("name", "Football")
-                k_dt = datetime.fromisoformat(m["utcDate"].replace("Z", "+00:00"))
-                return {
-                    "sport": "FOOTBALL",
+                        ts = k_dt.timestamp()
+                        if earliest_ts is None or ts < earliest_ts:
+                            earliest_ts = ts
+                            earliest_match = m
+            if earliest_match:
+                home = earliest_match.get("homeTeam", {}).get("name", "Home")
+                away = earliest_match.get("awayTeam", {}).get("name", "Away")
