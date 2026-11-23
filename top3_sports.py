@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta, timezone
 import json
 import os
-import requests  # Make sure 'requests' is in your requirements.txt
+import requests
 
-# 1. Timezone & Date Setup (WAT / Africa/Lagos)
+# 1. Timezone & Date Setup (WAT / Nigeria Time)
 NY = datetime.now(timezone.utc)
 WAT = timezone(timedelta(hours=1))
 NW = NY.astimezone(WAT)
@@ -16,7 +16,7 @@ TMW = (NW + timedelta(days=1)).strftime("%Y-%m-%d")
 BLT = {"unavailable", "none", "null", "n/a", ""}
 
 
-# 2. Data Cleaning Helpers (Filters out invalid/missing scores)
+# 2. Data Cleaning Helpers
 def ok(v):
   return v is not None and str(v).strip().lower() not in BLT
 
@@ -37,10 +37,11 @@ def scr(o):
   return o
 
 
-# 3. Fetch Your Exact Score Data
-# Replace API_URL and HEADERS with your actual sports API endpoint (e.g., Sportmonks)
+# 3. Fetch Exact Score Data
+# Uses the environment variables defined in your GitHub Actions workflow:
+# os.getenv("API_FOOTBALL_KEY"), os.getenv("SPORTMONKS_TOKEN"), os.getenv("FOOTBALL_DATA_KEY"), or os.getenv("GOAL_API_KEY")
 API_URL = "YOUR_API_ENDPOINT_HERE"
-HEADERS = {"Authorization": os.getenv("API_TOKEN", "")}
+HEADERS = {"Authorization": os.getenv("SPORTMONKS_TOKEN", "")}
 
 response = requests.get(API_URL, headers=HEADERS, timeout=30)
 response.raise_for_status()
@@ -59,9 +60,8 @@ output_payload = {
     ),
 }
 
-# 5. Save to outputs/top3_sports.json
-os.makedirs("outputs", exist_ok=True)
-with open("outputs/top3_sports.json", "w", encoding="utf-8") as f:
+# 5. Save directly to top3_sports.json (since workflow already runs `cd outputs`)
+with open("top3_sports.json", "w", encoding="utf-8") as f:
   json.dump(output_payload, f, indent=2)
 
-print("Successfully updated outputs/top3_sports.json")
+print("Successfully updated top3_sports.json")
