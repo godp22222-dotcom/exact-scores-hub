@@ -1,5 +1,5 @@
 {
-  "updated_at_Nigeria": "2026-11-23 11:15 AM WAT",
+  "updated_at_Nigeria": "2026-11-23 11:36 AM WAT",
   "count": 11,
   "status": {
     "API-Football": "OK (3)",
@@ -8,13 +8,6 @@
     "GOAL-API": "OK (3)"
   },
   "picks": [
-    {
-      "source": "API-Football",
-      "match": "Pyunik II vs BKMA II",
-      "kickoff_Nigeria": "2026-11-23 11:30 AM WAT",
-      "halfTimeExactScore": "0 - 1",
-      "fullTimeExactScore": "1 - 2"
-    },
     {
       "source": "API-Football",
       "match": "Barki Tajik vs Istiqlol",
@@ -28,6 +21,13 @@
       "kickoff_Nigeria": "2026-11-23 12:00 PM WAT",
       "halfTimeExactScore": "0 - 0",
       "fullTimeExactScore": "1 - 1"
+    },
+    {
+      "source": "API-Football",
+      "match": "LNZ Cherkasy vs Polessya",
+      "kickoff_Nigeria": "2026-11-23 12:00 PM WAT",
+      "halfTimeExactScore": "0 - 0",
+      "fullTimeExactScore": "0 - 1"
     },
     {
       "source": "Sportmonks",
@@ -52,14 +52,14 @@
     },
     {
       "source": "Football-Data",
-      "match": "Levante UD vs Elche CF",
+      "match": "Brentford FC vs Everton FC",
       "kickoff_Nigeria": "2026-11-23 09:00 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
     {
       "source": "Football-Data",
-      "match": "Brentford FC vs Everton FC",
+      "match": "Levante UD vs Elche CF",
       "kickoff_Nigeria": "2026-11-23 09:00 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"

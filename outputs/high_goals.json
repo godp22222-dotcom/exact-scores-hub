@@ -1,21 +1,30 @@
 {
-  "updated_at_Nigeria": "2026-11-23 11:15 AM WAT",
+  "updated_at_Nigeria": "2026-11-23 11:36 AM WAT",
   "status": "OK (1)",
   "count": 1,
   "picks": [
     {
-      "league": "First League",
-      "match": "Pyunik II vs BKMA II",
-      "kickoff_Nigeria": "2026-11-23 11:30 AM WAT",
-      "bestHighExactScore": "3 - 2",
-      "bestScoreOdd": 10.0,
+      "league": "Premier League",
+      "match": "Chornomorets vs Epitsentr Dunayivtsi",
+      "kickoff_Nigeria": "2026-11-23 12:00 PM WAT",
+      "bestHighExactScore": "2 - 2",
+      "bestScoreOdd": 13.0,
       "targetOdds": {
-        "3 - 2": 10.0,
-        "2 - 2": 10.0,
-        "2 - 3": 10.0,
-        "0 - 4": 10.0,
-        "1 - 4": 10.0,
-        "2 - 4": 10.0
+        "2 - 2": 13.0,
+        "2 - 3": 29.0,
+        "3 - 2": 34.0,
+        "1 - 4": 51.0,
+        "0 - 4": 56.0,
+        "3 - 3": 61.0,
+        "4 - 1": 67.0,
+        "4 - 0": 71.0,
+        "2 - 4": 71.0,
+        "4 - 2": 81.0,
+        "0 - 5": 101.0,
+        "1 - 5": 101.0,
+        "5 - 0": 126.0,
+        "5 - 1": 126.0,
+        "4 - 4": 151.0
       }
     }
   ]
