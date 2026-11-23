@@ -1,45 +1,31 @@
 {
-  "updated_at_Nigeria": "2026-11-23 01:57 PM WAT",
-  "count": 8,
+  "updated_at_Nigeria": "2026-11-23 09:08 PM WAT",
+  "count": 6,
   "status": {
     "API-Football": "OK (0)",
-    "Sportmonks": "OK (2)",
+    "Sportmonks": "OK (0)",
     "Football-Data": "OK (3)",
     "GOAL-API": "OK (3)"
   },
   "picks": [
     {
-      "source": "Sportmonks",
-      "match": "Br\u00f8ndby IF vs FC Midtjylland",
-      "kickoff_Nigeria": "2026-11-23 07:00 PM WAT",
-      "halfTimeExactScore": "unavailable",
-      "fullTimeExactScore": "unavailable"
-    },
-    {
-      "source": "Sportmonks",
-      "match": "Brentford vs Everton",
-      "kickoff_Nigeria": "2026-11-23 09:00 PM WAT",
+      "source": "Football-Data",
+      "match": "SC Internacional vs EC Vit\u00f3ria",
+      "kickoff_Nigeria": "2026-11-23 11:30 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
     {
       "source": "Football-Data",
-      "match": "AC Monza vs ACF Fiorentina",
-      "kickoff_Nigeria": "2026-11-23 08:45 PM WAT",
+      "match": "Botafogo FR vs S\u00e3o Paulo FC",
+      "kickoff_Nigeria": "2026-11-24 12:00 AM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
     {
       "source": "Football-Data",
-      "match": "Brentford FC vs Everton FC",
-      "kickoff_Nigeria": "2026-11-23 09:00 PM WAT",
-      "halfTimeExactScore": "unavailable",
-      "fullTimeExactScore": "unavailable"
-    },
-    {
-      "source": "Football-Data",
-      "match": "Levante UD vs Elche CF",
-      "kickoff_Nigeria": "2026-11-23 09:00 PM WAT",
+      "match": "Santos FC vs Gr\u00eamio FBPA",
+      "kickoff_Nigeria": "2026-11-24 01:00 AM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
