@@ -1,31 +1,38 @@
 {
-  "updated_at_Nigeria": "2026-11-23 11:21 PM WAT",
-  "count": 6,
+  "updated_at_Nigeria": "2026-11-22 05:30 PM WAT",
+  "count": 7,
   "status": {
     "API-Football": "OK (0)",
-    "Sportmonks": "OK (0)",
+    "Sportmonks": "OK (1)",
     "Football-Data": "OK (3)",
     "GOAL-API": "OK (3)"
   },
   "picks": [
     {
-      "source": "Football-Data",
-      "match": "SC Internacional vs EC Vit\u00f3ria",
-      "kickoff_Nigeria": "2026-11-23 11:30 PM WAT",
+      "source": "Sportmonks",
+      "match": "Nordsj\u00e6lland vs FC K\u00f8benhavn",
+      "kickoff_Nigeria": "2026-11-22 06:00 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
     {
       "source": "Football-Data",
-      "match": "Botafogo FR vs S\u00e3o Paulo FC",
-      "kickoff_Nigeria": "2026-11-24 12:00 AM WAT",
+      "match": "AC Milan vs Frosinone Calcio",
+      "kickoff_Nigeria": "2026-11-22 06:00 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
     {
       "source": "Football-Data",
-      "match": "Santos FC vs Gr\u00eamio FBPA",
-      "kickoff_Nigeria": "2026-11-24 01:00 AM WAT",
+      "match": "CA Osasuna vs M\u00e1laga CF",
+      "kickoff_Nigeria": "2026-11-22 06:30 PM WAT",
+      "halfTimeExactScore": "unavailable",
+      "fullTimeExactScore": "unavailable"
+    },
+    {
+      "source": "Football-Data",
+      "match": "CA Paranaense vs Clube do Remo",
+      "kickoff_Nigeria": "2026-11-22 08:00 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },

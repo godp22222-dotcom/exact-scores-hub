@@ -1,14 +1,22 @@
 {
-  "updated_at": "2026-11-23 23:21:33 WAT",
-  "date": "2026-11-23",
-  "premium_exact_score_pick": {
-    "source": "Hub-Engine (scores.json)",
-    "league": "Football",
-    "match": "SC Internacional vs EC Vit\u00f3ria",
-    "kickoff": "2026-11-23",
-    "premium_exact_score": "1:0",
-    "confidence_score": 67.2,
-    "win_probability_pct": 54,
-    "exact_score_probability_pct": 17.4
-  }
+  "updated_at_Nigeria": "2026-11-22 05:31 PM WAT",
+  "date": "2026-11-22",
+  "count": 2,
+  "picks": [
+    {
+      "sport": "BASKETBALL",
+      "match": "VMI vs Gardner Webb",
+      "recommended_pick": "2/1 (Away HT / Home FT)",
+      "odd": 6.5,
+      "note": "Verified Basketball HT/FT comeback line (2/1 (Away HT / Home FT)) on Football.com."
+    },
+    {
+      "sport": "TABLE TENNIS",
+      "competition": "Czech Liga Pro / TT Cup / Setka Cup (Live Daily on Football.com)",
+      "match": "Target Pre-Match Favorite (1.35 - 1.55 Match Odds)",
+      "recommended_pick": "2/1 (Away/Player 2 1st Set / Home/Player 1 Match Winner)",
+      "target_odd": "5.50 - 8.50",
+      "note": "API-Sports & Sportmonks do not cover Table Tennis; open Table Tennis -> 1st Set/Match Winner on Football.com and back 2/1 on a strong favorite."
+    }
+  ]
 }
