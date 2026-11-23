@@ -72,8 +72,7 @@ def parse_score(score_str):
         return None
     parts = [p.strip() for p in score_str.split("-")]
     if len(parts) == 2 and all(p.isdigit() for p in parts):
-        nums = tuple(int(p) for p in parts)
-        return nums
+        return tuple(int(p) for p in parts)
     return None
 
 
@@ -244,25 +243,27 @@ def get_football_pick(clean_hg, clean_scores):
             "odd": top_fb.get("target_odd")
         }
 
-    if FOOTBALL_DATA_KEY:
+    return None
+
+
+def get_basketball_pick():
+    if not APISPORTS_KEY:
+        return None
+    headers = {"x-apisports-key": APISPORTS_KEY}
+    endpoints = [
+        ("v1.basketball.api-sports.io", "/games", "/odds"),
+        ("v2.nba.api-sports.io", "/games", "/odds")
+    ]
+    for host, g_path, o_path in endpoints:
         try:
-            fd_res = requests.get(
-                "https://football-data.org",
-                headers={"X-Auth-Token": FOOTBALL_DATA_KEY},
-                params={"dateFrom": TODAY, "dateTo": TOMORROW},
-                timeout=15
-            ).json()
-            earliest_ts = None
-            earliest_match = None
-            for m in fd_res.get("matches", []):
-                utc_str = m.get("utcDate", "")
-                if m.get("status") in ["SCHEDULED", "TIMED"] and utc_str:
-                    k_dt = datetime.fromisoformat(utc_str.replace("Z", "+00:00"))
-                    if k_dt > NOW_UTC:
-                        ts = k_dt.timestamp()
-                        if earliest_ts is None or ts < earliest_ts:
-                            earliest_ts = ts
-                            earliest_match = m
-            if earliest_match:
-                home = earliest_match.get("homeTeam", {}).get("name", "Home")
-                away = earliest_match.get("awayTeam", {}).get("name", "Away")
+            res = requests.get("https://" + host + g_path, headers=headers, params={"date": TODAY}, timeout=15).json()
+            for g in res.get("response", [])[:10]:
+                game_id = g.get("id") or (g.get("game", {}).get("id") if isinstance(g.get("game"), dict) else None)
+                if not game_id:
+                    continue
+                o_res = requests.get("https://" + host + o_path, headers=headers, params={"game": game_id}, timeout=15).json()
+                odd_1_2, odd_2_1 = None, None
+                for item in o_res.get("response", []):
+                    for bk in item.get("bookmakers", []):
+                        for bet in bk.get("bets", []):
+                            if any(k in bet.get("name", "").lower() for k in ["ht/ft", "half", "double result"]):
