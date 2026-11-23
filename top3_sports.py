@@ -4,13 +4,8 @@ import json
 import requests
 from datetime import datetime, timezone, timedelta
 
-# ---------------------------------------------------------
-# PRIVATE TOKENS (Loaded securely from GitHub Secrets)
-# ---------------------------------------------------------
 APISPORTS_KEY = os.environ.get("API_FOOTBALL_KEY") or os.environ.get("API_KEY")
 FOOTBALL_DATA_KEY = os.environ.get("FOOTBALL_DATA_KEY")
-GOAL_API_KEY = os.environ.get("GOAL_API_KEY")
-SPORTMONKS_TOKEN = os.environ.get("SPORTMONKS_TOKEN")
 
 NOW_UTC = datetime.now(timezone.utc)
 WAT = timezone(timedelta(hours=1))
@@ -32,10 +27,6 @@ def is_valid_value(val):
 
 
 def scrub_unavailable(obj):
-    """
-    Disciplinary guard: strips any list item or key containing 'unavailable'
-    before any JSON file is written to disk.
-    """
     if isinstance(obj, list):
         cleaned = []
         for item in obj:
@@ -80,8 +71,8 @@ def parse_score(score_str):
     if not isinstance(score_str, str) or "-" not in score_str:
         return None
     parts = [p.strip() for p in score_str.split("-")]
-    if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
-        return int(parts[0]), int(parts[1])
+    if len(parts) == 2 and parts.isdigit() and parts.isdigit():
+        return int(parts), int(parts)
     return None
 
 
@@ -126,7 +117,6 @@ def sanitize_all_outputs(now_str):
         "picks": clean_hg
     })
 
-    # Clean scores.json: strictly exclude 'unavailable' & far-future dates
     clean_scores = []
     source_counts = {}
     for item in scores.get("picks", []):
@@ -157,14 +147,13 @@ def sanitize_all_outputs(now_str):
         "picks": clean_scores
     })
 
-    # Populate draws.json from API exact score draws if empty
     draws = load_json("draws.json")
     draw_picks = [p for p in draws.get("picks", []) if isinstance(p, dict)]
     if not draw_picks:
         seen = set()
         for item in clean_hg:
             parsed = parse_score(item.get("bestHighExactScore", ""))
-            if parsed and parsed[0] == parsed[1]:
+            if parsed and parsed == parsed:
                 key = normalize_match(item.get("match", ""))
                 if key not in seen:
                     seen.add(key)
@@ -177,7 +166,7 @@ def sanitize_all_outputs(now_str):
                     })
         for item in clean_scores:
             parsed = parse_score(item.get("fullTimeExactScore", ""))
-            if parsed and parsed[0] == parsed[1]:
+            if parsed and parsed == parsed:
                 key = normalize_match(item.get("match", ""))
                 if key not in seen:
                     seen.add(key)
@@ -194,13 +183,12 @@ def sanitize_all_outputs(now_str):
         "picks": draw_picks
     })
 
-    # Populate ht_goals.json from verified HT exact scores if empty
     ht_goals = load_json("ht_goals.json")
     ht_picks = [p for p in ht_goals.get("picks", []) if isinstance(p, dict)]
     if not ht_picks:
         for item in clean_scores:
             parsed_ht = parse_score(item.get("halfTimeExactScore", ""))
-            if parsed_ht and (parsed_ht[0] + parsed_ht[1]) >= 1:
+            if parsed_ht and (parsed_ht + parsed_ht) >= 1:
                 ht_picks.append({
                     "source": item.get("source"),
                     "match": item.get("match"),
@@ -218,9 +206,8 @@ def sanitize_all_outputs(now_str):
 
 
 def get_football_pick(clean_hg, clean_scores):
-    # 1. Primary API Exact Score from high_goals.json (Today or Tomorrow)
     if clean_hg:
-        top = clean_hg[0]
+        top = clean_hg
         return {
             "sport": "FOOTBALL",
             "tier": "PREMIUM EXACT SCORE",
@@ -231,9 +218,8 @@ def get_football_pick(clean_hg, clean_scores):
             "odd": top.get("bestScoreOdd")
         }
 
-    # 2. Secondary API Exact Score from scores.json (Today or Tomorrow)
     if clean_scores:
-        top = clean_scores[0]
+        top = clean_scores
         return {
             "sport": "FOOTBALL",
             "tier": "PREMIUM EXACT SCORE",
@@ -244,11 +230,10 @@ def get_football_pick(clean_hg, clean_scores):
             "fullTimeExactScore": top.get("fullTimeExactScore")
         }
 
-    # 3. Tertiary API fixture from htft_comebacks.json (Tonight / Tomorrow)
     htft = load_json("htft_comebacks.json")
     fb_picks = [p for p in htft.get("football_picks", []) if isinstance(p, dict)]
     if fb_picks:
-        top = fb_picks[0]
+        top = fb_picks
         return {
             "sport": "FOOTBALL",
             "tier": "PREMIUM EXACT SCORE",
@@ -258,9 +243,27 @@ def get_football_pick(clean_hg, clean_scores):
             "odd": top.get("target_odd")
         }
 
-    # 4. Direct Private Token Query (FOOTBALL_DATA_KEY)
     if FOOTBALL_DATA_KEY:
         try:
             fd_res = requests.get(
                 "https://football-data.org",
                 headers={"X-Auth-Token": FOOTBALL_DATA_KEY},
+                params={"dateFrom": TODAY, "dateTo": TOMORROW},
+                timeout=15
+            ).json()
+            upcoming = []
+            for m in fd_res.get("matches", []):
+                utc_str = m.get("utcDate", "")
+                if m.get("status") in ["SCHEDULED", "TIMED"] and utc_str:
+                    k_dt = datetime.fromisoformat(utc_str.replace("Z", "+00:00"))
+                    if k_dt > NOW_UTC:
+                        upcoming.append((k_dt.timestamp(), m))
+            upcoming.sort(key=lambda x: x)
+            if upcoming:
+                _, m = upcoming
+                home = m.get("homeTeam", {}).get("name", "Home")
+                away = m.get("awayTeam", {}).get("name", "Away")
+                comp = m.get("competition", {}).get("name", "Football")
+                k_dt = datetime.fromisoformat(m["utcDate"].replace("Z", "+00:00"))
+                return {
+                    "sport": "FOOTBALL",
