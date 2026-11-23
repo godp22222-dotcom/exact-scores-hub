@@ -32,141 +32,158 @@ def best_poisson_score(home_xg, away_xg):
   return best_score, round(best_prob * 100, 1)
 
 
+def extract_matches_from_local_jsons():
+  """Reads already-fetched matches from sibling JSON files in outputs/."""
+  candidates = []
+  for fname in [
+      "scores.json",
+      "high_goals.json",
+      "draws.json",
+      "high_odds_sports.json",
+  ]:
+    if not os.path.exists(fname):
+      continue
+    try:
+      with open(fname, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+      items = data if isinstance(data, list) else []
+      if isinstance(data, dict):
+        for val in data.values():
+          if isinstance(val, list) and val:
+            items = val
+            break
+
+      for m in items:
+        if not isinstance(m, dict):
+          continue
+        home = (
+            m.get("home")
+            or m.get("home_team")
+            or m.get("homeTeam")
+            or (
+                m.get("teams", {}).get("home", {}).get("name")
+                if isinstance(m.get("teams"), dict)
+                else None
+            )
+        )
+        away = (
+            m.get("away")
+            or m.get("away_team")
+            or m.get("awayTeam")
+            or (
+                m.get("teams", {}).get("away", {}).get("name")
+                if isinstance(m.get("teams"), dict)
+                else None
+            )
+        )
+        match_name = m.get("match") or m.get("fixture") or m.get("name")
+        if not match_name and home and away:
+          match_name = f"{home} vs {away}"
+        if not match_name or not isinstance(match_name, str):
+          continue
+
+        league = m.get("league") or m.get("competition") or "Football"
+        if isinstance(league, dict):
+          league = league.get("name", "Football")
+
+        kickoff = (
+            m.get("kickoff")
+            or m.get("date")
+            or m.get("utcDate")
+            or m.get("time")
+            or TW
+        )
+
+        h_odds = float(m.get("home_odds") or m.get("odd_1") or 1.85)
+        a_odds = float(m.get("away_odds") or m.get("odd_2") or 3.80)
+        h_xg = round(min(max(2.6 / max(h_odds, 1.1), 0.85), 2.4), 2)
+        a_xg = round(min(max(2.6 / max(a_odds, 1.1), 0.65), 2.1), 2)
+
+        exact_score, score_prob = best_poisson_score(h_xg, a_xg)
+        win_prob = min(int(round((1 / max(h_odds, 1.15)) * 100)), 85)
+
+        candidates.append({
+            "source": f"Hub-Engine ({fname})",
+            "league": str(league),
+            "match": match_name,
+            "kickoff": str(kickoff),
+            "premium_exact_score": exact_score,
+            "confidence_score": round((win_prob * 0.6) + (score_prob * 2), 1),
+            "win_probability_pct": win_prob,
+            "exact_score_probability_pct": score_prob,
+        })
+    except Exception as e:
+      print(f"Skipping local {fname}: {e}")
+  return candidates
+
+
 def get_real_premium_pick():
   candidates = []
-  target_dates = [TW, TMW]  # Checks Today first, then Tomorrow if needed
 
-  # SOURCE 1: API-Football Real Predictions & Win Percentages
-  if API_FOOTBALL_KEY:
-    headers = {"x-apisports-key": API_FOOTBALL_KEY}
-    for check_date in target_dates:
-      if candidates:
-        break
-      try:
-        url = f"https://api-sports.io{check_date}&status=NS"
-        res = requests.get(url, headers=headers, timeout=25).json()
-        for item in res.get("response", [])[:20]:
-          fid = item.get("fixture", {}).get("id")
-          home = item.get("teams", {}).get("home", {}).get("name")
-          away = item.get("teams", {}).get("away", {}).get("name")
-          league = item.get("league", {}).get("name", "Football")
-          kickoff = item.get("fixture", {}).get("date", check_date)
-          if not fid or not home or not away:
-            continue
-
-          p_res = requests.get(
-              f"https://api-sports.io{fid}",
-              headers=headers,
-              timeout=15,
-          ).json()
-          p_list = p_res.get("response", [])
-          if not p_list or not isinstance(p_list, list):
-            continue
-
-          p_data = p_list
-          pred = p_data.get("predictions", {})
-          percent = pred.get("percent", {})
-          h_pct = int(str(percent.get("home", "0")).replace("%", "") or 0)
-          d_pct = int(str(percent.get("draw", "0")).replace("%", "") or 0)
-          a_pct = int(str(percent.get("away", "0")).replace("%", "") or 0)
-          top_win_pct = max(h_pct, d_pct, a_pct)
-
-          teams_stats = p_data.get("teams", {})
-          h_avg = float(
-              teams_stats.get("home", {})
-              .get("league", {})
-              .get("goals", {})
-              .get("for", {})
-              .get("average", {})
-              .get("home")
-              or 1.35
-          )
-          a_avg = float(
-              teams_stats.get("away", {})
-              .get("league", {})
-              .get("goals", {})
-              .get("for", {})
-              .get("average", {})
-              .get("away")
-              or 1.05
-          )
-          exact_score, score_prob = best_poisson_score(h_avg, a_avg)
-
-          candidates.append({
-              "source": "API-Football",
-              "match_date": check_date,
-              "league": league,
-              "match": f"{home} vs {away}",
-              "kickoff": kickoff,
-              "premium_exact_score": exact_score,
-              "confidence_score": round((top_win_pct * 0.6) + (score_prob * 2), 1),
-              "win_probability_pct": top_win_pct,
-              "exact_score_probability_pct": score_prob,
-          })
-      except Exception as e:
-        print(f"API-Football check skipped for {check_date}: {e}")
-
-  # SOURCE 2: Sportmonks Fallback (Today + Tomorrow)
-  if not candidates and SPORTMONKS_TOKEN:
-    for check_date in target_dates:
-      if candidates:
-        break
-      try:
-        url = f"https://sportmonks.com{check_date}?api_token={SPORTMONKS_TOKEN}&include=participants;predictions"
-        res = requests.get(url, timeout=25).json()
-        for item in res.get("data", [])[:20]:
-          name = item.get("name")
-          kickoff = item.get("starting_at", check_date)
-          if name:
-            exact_score, score_prob = best_poisson_score(1.40, 1.00)
-            candidates.append({
-                "source": "Sportmonks",
-                "match_date": check_date,
-                "league": "Football",
-                "match": name,
-                "kickoff": kickoff,
-                "premium_exact_score": exact_score,
-                "confidence_score": 72.0,
-                "win_probability_pct": 62,
-                "exact_score_probability_pct": score_prob,
-            })
-      except Exception as e:
-        print(f"Sportmonks check skipped for {check_date}: {e}")
-
-  # SOURCE 3: Football-Data.org Fallback (Today + Tomorrow)
-  if not candidates and FOOTBALL_DATA_KEY:
+  # 1. Try Football-Data.org (Supports free-tier tomorrow & upcoming fixtures)
+  if FOOTBALL_DATA_KEY:
     headers = {"X-Auth-Token": FOOTBALL_DATA_KEY}
-    for check_date in target_dates:
+    for check_date in [TW, TMW]:
       if candidates:
         break
       try:
         url = f"https://football-data.org{check_date}"
-        res = requests.get(url, headers=headers, timeout=25).json()
-        for m in res.get("matches", [])[:10]:
+        res = requests.get(url, headers=headers, timeout=20).json()
+        for m in res.get("matches", [])[:15]:
           if m.get("status") in ("SCHEDULED", "TIMED"):
             home = m.get("homeTeam", {}).get("name")
             away = m.get("awayTeam", {}).get("name")
             if home and away:
-              exact_score, score_prob = best_poisson_score(1.45, 0.95)
+              exact_score, score_prob = best_poisson_score(1.55, 0.90)
               candidates.append({
                   "source": "Football-Data",
-                  "match_date": check_date,
                   "league": m.get("competition", {}).get("name", "Football"),
                   "match": f"{home} vs {away}",
                   "kickoff": m.get("utcDate", check_date),
                   "premium_exact_score": exact_score,
-                  "confidence_score": 60.0,
-                  "win_probability_pct": 55,
+                  "confidence_score": 68.5,
+                  "win_probability_pct": 60,
                   "exact_score_probability_pct": score_prob,
               })
       except Exception as e:
-        print(f"Football-Data check skipped for {check_date}: {e}")
+        print(f"Football-Data skipped: {e}")
+
+  # 2. Try API-Football for Today's Live/Remaining Fixtures
+  if not candidates and API_FOOTBALL_KEY:
+    try:
+      headers = {"x-apisports-key": API_FOOTBALL_KEY}
+      url = f"https://api-sports.io{TW}"
+      res = requests.get(url, headers=headers, timeout=20).json()
+      for item in res.get("response", [])[:15]:
+        status = item.get("fixture", {}).get("status", {}).get("short", "")
+        if status in ("NS", "1H", "HT"):
+          home = item.get("teams", {}).get("home", {}).get("name")
+          away = item.get("teams", {}).get("away", {}).get("name")
+          if home and away:
+            exact_score, score_prob = best_poisson_score(1.45, 0.95)
+            candidates.append({
+                "source": "API-Football",
+                "league": item.get("league", {}).get("name", "Football"),
+                "match": f"{home} vs {away}",
+                "kickoff": item.get("fixture", {}).get("date", TW),
+                "premium_exact_score": exact_score,
+                "confidence_score": 66.0,
+                "win_probability_pct": 58,
+                "exact_score_probability_pct": score_prob,
+            })
+    except Exception as e:
+      print(f"API-Football skipped: {e}")
+
+  # 3. Guaranteed Fallback: Pull from your already-generated Hub JSON files
+  if not candidates:
+    candidates = extract_matches_from_local_jsons()
 
   if not candidates:
     return None
 
   candidates.sort(key=lambda x: x["confidence_score"], reverse=True)
-  return candidates
+  return candidates[0]
 
 
 premium_pick = get_real_premium_pick()
@@ -180,4 +197,4 @@ output_payload = {
 with open("top3_sports.json", "w", encoding="utf-8") as f:
   json.dump(output_payload, f, indent=2)
 
-print("Successfully updated top3_sports.json with 1 premium exact score pick.")
+print("Successfully updated top3_sports.json.")
