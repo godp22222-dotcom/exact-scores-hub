@@ -1,5 +1,5 @@
 {
-  "updated_at_Nigeria": "2026-11-23 12:25 PM WAT",
+  "updated_at_Nigeria": "2026-11-23 12:31 PM WAT",
   "count": 11,
   "status": {
     "API-Football": "OK (3)",
@@ -10,24 +10,24 @@
   "picks": [
     {
       "source": "API-Football",
-      "match": "Mes Soongoun vs Ario Eslamshahr",
-      "kickoff_Nigeria": "2026-11-23 12:30 PM WAT",
+      "match": "Shkendija vs Sileks",
+      "kickoff_Nigeria": "2026-11-23 01:00 PM WAT",
       "halfTimeExactScore": "0 - 0",
-      "fullTimeExactScore": "1 - 0"
+      "fullTimeExactScore": "1 - 1"
     },
     {
       "source": "API-Football",
-      "match": "Saipa vs Naft Bandar Abbas",
-      "kickoff_Nigeria": "2026-11-23 12:30 PM WAT",
-      "halfTimeExactScore": "0 - 0",
-      "fullTimeExactScore": "1 - 0"
+      "match": "Cherno more II vs Fratria II",
+      "kickoff_Nigeria": "2026-11-23 01:00 PM WAT",
+      "halfTimeExactScore": "1 - 0",
+      "fullTimeExactScore": "3 - 0"
     },
     {
       "source": "API-Football",
-      "match": "Young Lions II vs Geylang II",
-      "kickoff_Nigeria": "2026-11-23 12:30 PM WAT",
-      "halfTimeExactScore": "unavailable",
-      "fullTimeExactScore": "unavailable"
+      "match": "Kabati Youth FC vs Kisumu All Stars",
+      "kickoff_Nigeria": "2026-11-23 01:00 PM WAT",
+      "halfTimeExactScore": "0 - 0",
+      "fullTimeExactScore": "1 - 1"
     },
     {
       "source": "Sportmonks",
@@ -52,14 +52,14 @@
     },
     {
       "source": "Football-Data",
-      "match": "Brentford FC vs Everton FC",
+      "match": "Levante UD vs Elche CF",
       "kickoff_Nigeria": "2026-11-23 09:00 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
     {
       "source": "Football-Data",
-      "match": "Levante UD vs Elche CF",
+      "match": "Brentford FC vs Everton FC",
       "kickoff_Nigeria": "2026-11-23 09:00 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
