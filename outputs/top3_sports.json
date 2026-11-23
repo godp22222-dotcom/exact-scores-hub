@@ -1,5 +1,14 @@
 {
-  "updated_at": "2026-11-23 21:46:18 WAT",
+  "updated_at": "2026-11-23 21:49:42 WAT",
   "date": "2026-11-23",
-  "premium_exact_score_pick": null
+  "premium_exact_score_pick": {
+    "source": "Hub-Engine (scores.json)",
+    "league": "Football",
+    "match": "SC Internacional vs EC Vit\u00f3ria",
+    "kickoff": "2026-11-23",
+    "premium_exact_score": "1:0",
+    "confidence_score": 67.2,
+    "win_probability_pct": 54,
+    "exact_score_probability_pct": 17.4
+  }
 }
