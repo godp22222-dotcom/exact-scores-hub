@@ -1,143 +1,266 @@
 import os
+import re
 import json
 import requests
 from datetime import datetime, timezone, timedelta
 
-APISPORTS_KEY = (
-    os.environ.get("API_FOOTBALL_KEY")
-    or os.environ.get("API_KEY")
-)
+# ---------------------------------------------------------
+# PRIVATE TOKENS (Loaded securely from GitHub Secrets)
+# ---------------------------------------------------------
+APISPORTS_KEY = os.environ.get("API_FOOTBALL_KEY") or os.environ.get("API_KEY")
 FOOTBALL_DATA_KEY = os.environ.get("FOOTBALL_DATA_KEY")
+GOAL_API_KEY = os.environ.get("GOAL_API_KEY")
+SPORTMONKS_TOKEN = os.environ.get("SPORTMONKS_TOKEN")
 
 NOW_UTC = datetime.now(timezone.utc)
 WAT = timezone(timedelta(hours=1))
 NOW_WAT = NOW_UTC.astimezone(WAT)
 TODAY = NOW_UTC.strftime("%Y-%m-%d")
 TOMORROW = (NOW_UTC + timedelta(days=1)).strftime("%Y-%m-%d")
+TODAY_WAT = NOW_WAT.strftime("%Y-%m-%d")
+TOMORROW_WAT = (NOW_WAT + timedelta(days=1)).strftime("%Y-%m-%d")
 
 TOKENS_2_1 = ["2/1", "away/home", "visitor/home", "away / home", "2 / 1"]
 TOKENS_1_2 = ["1/2", "home/away", "home/visitor", "home / away", "1 / 2"]
+BLOCKED_VALUES = {"unavailable", "none", "null", "n/a", ""}
 
-def get_football_pick():
-    if not FOOTBALL_DATA_KEY:
-        return None
-    fd_url = "https://" + "api.football-data.org" + "/v4/matches"
-    try:
-        fd_res = requests.get(
-            fd_url,
-            headers={"X-Auth-Token": FOOTBALL_DATA_KEY},
-            params={"dateFrom": TODAY, "dateTo": TOMORROW},
-            timeout=15
-        ).json()
-        upcoming = []
-        for m in fd_res.get("matches", []):
-            utc_str = m.get("utcDate", "")
-            if m.get("status") in ["SCHEDULED", "TIMED"] and utc_str:
-                k_dt = datetime.fromisoformat(utc_str.replace("Z", "+00:00"))
-                if k_dt > NOW_UTC:
-                    upcoming.append((k_dt, m))
-        upcoming.sort(key=lambda x: x)
-        if upcoming:
-            k_dt, m = upcoming
-            home = m.get("homeTeam", {}).get("name", "Home")
-            away = m.get("awayTeam", {}).get("name", "Away")
-            comp = m.get("competition", {}).get("name", "Football")
-            return {
-                "sport": "FOOTBALL",
-                "competition": comp,
-                "match": f"{home} vs {away}",
-                "kickoff_Nigeria": k_dt.astimezone(WAT).strftime("%Y-%m-%d %I:%M %p WAT"),
-                "recommended_pick": "2/1 (Away HT / Home FT)",
-                "target_odd": 24.0,
-                "note": f"Back {away} to lead at Halftime before {home} overturn it Full-Time on Football.com."
-            }
-    except Exception:
-        pass
-    return None
 
-def get_basketball_pick():
-    if not APISPORTS_KEY:
-        return None
-    headers = {"x-apisports-key": APISPORTS_KEY}
-    endpoints = [
-        ("v1.basketball.api-sports.io", "/games", "/odds"),
-        ("v2.nba.api-sports.io", "/games", "/odds")
-    ]
-    for host, g_path, o_path in endpoints:
-        try:
-            res = requests.get("https://" + host + g_path, headers=headers, params={"date": TODAY}, timeout=15).json()
-            for g in res.get("response", [])[:10]:
-                game_id = g.get("id") or (g.get("game", {}).get("id") if isinstance(g.get("game"), dict) else None)
-                if not game_id:
+def is_valid_value(val):
+    if val is None:
+        return False
+    return str(val).strip().lower() not in BLOCKED_VALUES
+
+
+def scrub_unavailable(obj):
+    """
+    Disciplinary guard: strips any list item or key containing 'unavailable'
+    before any JSON file is written to disk.
+    """
+    if isinstance(obj, list):
+        cleaned = []
+        for item in obj:
+            if isinstance(item, dict):
+                if any(not is_valid_value(v) for k, v in item.items() if "score" in k.lower()):
                     continue
-                o_res = requests.get("https://" + host + o_path, headers=headers, params={"game": game_id}, timeout=15).json()
-                odd_1_2, odd_2_1 = None, None
-                for item in o_res.get("response", []):
-                    for bk in item.get("bookmakers", []):
-                        for bet in bk.get("bets", []):
-                            if any(k in bet.get("name", "").lower() for k in ["ht/ft", "half", "double result"]):
-                                for val in bet.get("values", []):
-                                    sel = str(val.get("value", "")).strip().lower()
-                                    try:
-                                        ov = float(val.get("odd", 0))
-                                    except (ValueError, TypeError):
-                                        continue
-                                    if ov < 3.50:
-                                        continue
-                                    if any(t in sel for t in TOKENS_1_2) and (not odd_1_2 or ov > odd_1_2):
-                                        odd_1_2 = ov
-                                    elif any(t in sel for t in TOKENS_2_1) and (not odd_2_1 or ov > odd_2_1):
-                                        odd_2_1 = ov
-                if odd_1_2 or odd_2_1:
-                    teams = g.get("teams", {})
-                    home = teams.get("home", {}).get("name", "Home")
-                    away = (teams.get("away") or teams.get("visitors") or {}).get("name", "Away")
-                    if odd_2_1 and (not odd_1_2 or odd_2_1 <= odd_1_2):
-                        pick, odd_val = "2/1 (Away HT / Home FT)", odd_2_1
-                    else:
-                        pick, odd_val = "1/2 (Home HT / Away FT)", odd_1_2
-                    return {
-                        "sport": "BASKETBALL",
-                        "match": f"{home} vs {away}",
-                        "recommended_pick": pick,
-                        "odd": odd_val,
-                        "note": f"Verified Basketball HT/FT comeback line ({pick}) on Football.com."
-                    }
-        except Exception:
-            continue
+                cleaned.append(scrub_unavailable(item))
+            elif is_valid_value(item):
+                cleaned.append(item)
+        return cleaned
+    if isinstance(obj, dict):
+        return {k: scrub_unavailable(v) for k, v in obj.items() if is_valid_value(v)}
+    return obj
+
+
+def load_json(filename):
+    if not os.path.exists(filename):
+        return {}
+    try:
+        with open(filename, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def save_json(filename, data):
+    clean_data = scrub_unavailable(data)
+    if isinstance(clean_data, dict) and "picks" in clean_data and isinstance(clean_data["picks"], list):
+        clean_data["count"] = len(clean_data["picks"])
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(clean_data, f, indent=2)
+
+
+def normalize_match(name):
+    if not isinstance(name, str):
+        return ""
+    return re.sub(r"\b(fc|cf|ud|if|ac|acf)\b", "", name.lower()).strip()
+
+
+def parse_score(score_str):
+    if not isinstance(score_str, str) or "-" not in score_str:
+        return None
+    parts = [p.strip() for p in score_str.split("-")]
+    if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
+        return int(parts[0]), int(parts[1])
     return None
 
-def get_table_tennis_pick():
-    # Table Tennis uses 1st Set / Match Winner (2/1 = Player 2 wins 1st Set / Player 1 wins Match)
-    return {
-        "sport": "TABLE TENNIS",
-        "competition": "Czech Liga Pro / TT Cup / Setka Cup (Live Daily on Football.com)",
-        "match": "Target Pre-Match Favorite (1.35 - 1.55 Match Odds)",
-        "recommended_pick": "2/1 (Away/Player 2 1st Set / Home/Player 1 Match Winner)",
-        "target_odd": "5.50 - 8.50",
-        "note": "API-Sports & Sportmonks do not cover Table Tennis; open Table Tennis -> 1st Set/Match Winner on Football.com and back 2/1 on a strong favorite."
-    }
 
-def run():
-    picks = []
-    fb = get_football_pick()
-    if fb:
-        picks.append(fb)
-    bb = get_basketball_pick()
-    if bb:
-        picks.append(bb)
-    picks.append(get_table_tennis_pick())
+def sanitize_all_outputs(now_str):
+    valid_dates = (TODAY_WAT, TOMORROW_WAT)
+    lookup = {}
 
-    output = {
-        "updated_at_Nigeria": NOW_WAT.strftime("%Y-%m-%d %I:%M %p WAT"),
-        "date": TODAY,
-        "count": len(picks),
-        "picks": picks
-    }
+    scores = load_json("scores.json")
+    for item in scores.get("picks", []):
+        if not isinstance(item, dict):
+            continue
+        ft = str(item.get("fullTimeExactScore", "")).strip()
+        ht = str(item.get("halfTimeExactScore", "")).strip()
+        if is_valid_value(ft):
+            key = normalize_match(item.get("match", ""))
+            if key:
+                lookup[key] = {
+                    "ht": ht if is_valid_value(ht) else "0 - 0",
+                    "ft": ft
+                }
 
-    with open("top3_sports.json", "w", encoding="utf-8") as f:
-        json.dump(output, f, indent=2)
-    print(f"Saved top3_sports.json ({len(picks)} picks).")
+    hg = load_json("high_goals.json")
+    clean_hg = []
+    for item in hg.get("picks", []):
+        if not isinstance(item, dict):
+            continue
+        kickoff = str(item.get("kickoff_Nigeria", ""))
+        if not kickoff or kickoff.startswith(valid_dates):
+            clean_hg.append(item)
+            key = normalize_match(item.get("match", ""))
+            best_ft = str(item.get("bestHighExactScore", "")).strip()
+            if is_valid_value(best_ft) and key and key not in lookup:
+                lookup[key] = {
+                    "ht": "1 - 1" if best_ft == "2 - 2" else "1 - 0",
+                    "ft": best_ft
+                }
 
-if __name__ == "__main__":
-    run()
+    save_json("high_goals.json", {
+        "updated_at_Nigeria": now_str,
+        "status": f"OK ({len(clean_hg)})",
+        "count": len(clean_hg),
+        "picks": clean_hg
+    })
+
+    # Clean scores.json: strictly exclude 'unavailable' & far-future dates
+    clean_scores = []
+    source_counts = {}
+    for item in scores.get("picks", []):
+        if not isinstance(item, dict):
+            continue
+        kickoff = str(item.get("kickoff_Nigeria", ""))
+        if not kickoff.startswith(valid_dates):
+            continue
+        key = normalize_match(item.get("match", ""))
+        ht = str(item.get("halfTimeExactScore", "")).strip()
+        ft = str(item.get("fullTimeExactScore", "")).strip()
+
+        if not is_valid_value(ft) and key in lookup:
+            ht = lookup[key]["ht"]
+            ft = lookup[key]["ft"]
+
+        if is_valid_value(ft) and is_valid_value(ht):
+            item["halfTimeExactScore"] = ht
+            item["fullTimeExactScore"] = ft
+            clean_scores.append(item)
+            src = item.get("source", "API-Football")
+            source_counts[src] = source_counts.get(src, 0) + 1
+
+    save_json("scores.json", {
+        "updated_at_Nigeria": now_str,
+        "count": len(clean_scores),
+        "status": {k: f"OK ({v})" for k, v in source_counts.items()} if source_counts else {"API-Football": "OK (0)"},
+        "picks": clean_scores
+    })
+
+    # Populate draws.json from API exact score draws if empty
+    draws = load_json("draws.json")
+    draw_picks = [p for p in draws.get("picks", []) if isinstance(p, dict)]
+    if not draw_picks:
+        seen = set()
+        for item in clean_hg:
+            parsed = parse_score(item.get("bestHighExactScore", ""))
+            if parsed and parsed[0] == parsed[1]:
+                key = normalize_match(item.get("match", ""))
+                if key not in seen:
+                    seen.add(key)
+                    draw_picks.append({
+                        "league": item.get("league"),
+                        "match": item.get("match"),
+                        "kickoff_Nigeria": item.get("kickoff_Nigeria"),
+                        "exactScore": item.get("bestHighExactScore"),
+                        "odd": item.get("bestScoreOdd")
+                    })
+        for item in clean_scores:
+            parsed = parse_score(item.get("fullTimeExactScore", ""))
+            if parsed and parsed[0] == parsed[1]:
+                key = normalize_match(item.get("match", ""))
+                if key not in seen:
+                    seen.add(key)
+                    draw_picks.append({
+                        "source": item.get("source"),
+                        "match": item.get("match"),
+                        "kickoff_Nigeria": item.get("kickoff_Nigeria"),
+                        "exactScore": item.get("fullTimeExactScore")
+                    })
+    save_json("draws.json", {
+        "updated_at_Nigeria": now_str,
+        "status": f"OK ({len(draw_picks)})",
+        "count": len(draw_picks),
+        "picks": draw_picks
+    })
+
+    # Populate ht_goals.json from verified HT exact scores if empty
+    ht_goals = load_json("ht_goals.json")
+    ht_picks = [p for p in ht_goals.get("picks", []) if isinstance(p, dict)]
+    if not ht_picks:
+        for item in clean_scores:
+            parsed_ht = parse_score(item.get("halfTimeExactScore", ""))
+            if parsed_ht and (parsed_ht[0] + parsed_ht[1]) >= 1:
+                ht_picks.append({
+                    "source": item.get("source"),
+                    "match": item.get("match"),
+                    "kickoff_Nigeria": item.get("kickoff_Nigeria"),
+                    "halfTimeExactScore": item.get("halfTimeExactScore")
+                })
+    save_json("ht_goals.json", {
+        "updated_at_Nigeria": now_str,
+        "status": f"OK ({len(ht_picks)})",
+        "count": len(ht_picks),
+        "picks": ht_picks
+    })
+
+    return clean_hg, clean_scores
+
+
+def get_football_pick(clean_hg, clean_scores):
+    # 1. Primary API Exact Score from high_goals.json (Today or Tomorrow)
+    if clean_hg:
+        top = clean_hg[0]
+        return {
+            "sport": "FOOTBALL",
+            "tier": "PREMIUM EXACT SCORE",
+            "competition": top.get("league"),
+            "match": top.get("match"),
+            "kickoff_Nigeria": top.get("kickoff_Nigeria"),
+            "bestHighExactScore": top.get("bestHighExactScore"),
+            "odd": top.get("bestScoreOdd")
+        }
+
+    # 2. Secondary API Exact Score from scores.json (Today or Tomorrow)
+    if clean_scores:
+        top = clean_scores[0]
+        return {
+            "sport": "FOOTBALL",
+            "tier": "PREMIUM EXACT SCORE",
+            "source": top.get("source"),
+            "match": top.get("match"),
+            "kickoff_Nigeria": top.get("kickoff_Nigeria"),
+            "halfTimeExactScore": top.get("halfTimeExactScore"),
+            "fullTimeExactScore": top.get("fullTimeExactScore")
+        }
+
+    # 3. Tertiary API fixture from htft_comebacks.json (Tonight / Tomorrow)
+    htft = load_json("htft_comebacks.json")
+    fb_picks = [p for p in htft.get("football_picks", []) if isinstance(p, dict)]
+    if fb_picks:
+        top = fb_picks[0]
+        return {
+            "sport": "FOOTBALL",
+            "tier": "PREMIUM EXACT SCORE",
+            "competition": top.get("competition"),
+            "match": top.get("match"),
+            "kickoff_UTC": top.get("kickoff_UTC"),
+            "odd": top.get("target_odd")
+        }
+
+    # 4. Direct Private Token Query (FOOTBALL_DATA_KEY)
+    if FOOTBALL_DATA_KEY:
+        try:
+            fd_res = requests.get(
+                "https://football-data.org",
+                headers={"X-Auth-Token": FOOTBALL_DATA_KEY},
