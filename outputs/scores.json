@@ -1,5 +1,5 @@
 {
-  "updated_at_Nigeria": "2026-11-23 12:09 PM WAT",
+  "updated_at_Nigeria": "2026-11-23 12:25 PM WAT",
   "count": 11,
   "status": {
     "API-Football": "OK (3)",
@@ -52,14 +52,14 @@
     },
     {
       "source": "Football-Data",
-      "match": "Levante UD vs Elche CF",
+      "match": "Brentford FC vs Everton FC",
       "kickoff_Nigeria": "2026-11-23 09:00 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
     {
       "source": "Football-Data",
-      "match": "Brentford FC vs Everton FC",
+      "match": "Levante UD vs Elche CF",
       "kickoff_Nigeria": "2026-11-23 09:00 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
