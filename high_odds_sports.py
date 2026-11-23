@@ -107,7 +107,7 @@ def run():
 
   headers = {"x-apisports-key": APISPORTS_KEY}
 
-  # 1. FOOTBALL: Official API-Sports /predictions Only (Zero fake 23.0/24.0 picks)
+  # 1. FOOTBALL: Official API-Sports /predictions Only
   try:
     fb_url = "https://v3.football." + BASE_APISPORTS
     fixtures = []
@@ -127,7 +127,7 @@ def run():
       if len(fixtures) >= 10:
         break
 
-    fixtures.sort(key=lambda x: x)
+    fixtures.sort(key=lambda x: x[0])
     for k_dt, item in fixtures[:6]:
       fid = (item.get("fixture") or {}).get("id")
       home = ((item.get("teams") or {}).get("home") or {}).get("name", "Home")
@@ -146,7 +146,7 @@ def run():
         time.sleep(0.7)
         continue
 
-      pred_obj = (p_list or {}).get("predictions") or {}
+      pred_obj = (p_list[0] or {}).get("predictions") or {}
       winner_info = pred_obj.get("winner") or {}
       percent = pred_obj.get("percent") or {}
       goals = pred_obj.get("goals") or {}
@@ -176,7 +176,7 @@ def run():
   except Exception:
     pass
 
-  # 2. OTHER SPORTS: Real Bookmaker Odds Only (Fixed NBA visitors team parser)
+  # 2. OTHER SPORTS: Real Bookmaker Odds Only
   for sport, (host, games_ep, odds_ep, id_param) in OTHER_SPORTS.items():
     try:
       base_url = f"https://{host}"
