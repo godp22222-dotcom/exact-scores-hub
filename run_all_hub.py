@@ -3,7 +3,7 @@ import os
 import re
 from datetime import datetime, timezone, timedelta
 
-OUTPUT_DIR = "outputs"
+OUTPUT_DIR = "."
 WAT = timezone(timedelta(hours=1))
 
 
@@ -20,7 +20,6 @@ def load_json(filename):
 
 
 def save_json(filename, data):
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
     path = os.path.join(OUTPUT_DIR, filename)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
@@ -43,8 +42,8 @@ def parse_score(score_str):
     if not isinstance(score_str, str) or "-" not in score_str:
         return None
     parts = [p.strip() for p in score_str.split("-")]
-    if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
-        return int(parts[0]), int(parts[1])
+    if len(parts) == 2 and parts.isdigit() and parts.isdigit():
+        return int(parts), int(parts)
     return None
 
 
@@ -161,7 +160,7 @@ def process_draws(now_str, clean_scores, high_goals_picks):
     if not picks:
         for item in high_goals_picks:
             parsed = parse_score(item.get("bestHighExactScore", ""))
-            if parsed and parsed[0] == parsed[1]:
+            if parsed and parsed == parsed:
                 key = normalize_match(item.get("match", ""))
                 if key not in seen:
                     seen.add(key)
@@ -175,7 +174,7 @@ def process_draws(now_str, clean_scores, high_goals_picks):
 
         for item in clean_scores:
             parsed = parse_score(item.get("fullTimeExactScore", ""))
-            if parsed and parsed[0] == parsed[1]:
+            if parsed and parsed == parsed:
                 key = normalize_match(item.get("match", ""))
                 if key not in seen:
                     seen.add(key)
@@ -207,7 +206,7 @@ def process_ht_goals(now_str, clean_scores):
     if not picks:
         for item in clean_scores:
             parsed_ht = parse_score(item.get("halfTimeExactScore", ""))
-            if parsed_ht and (parsed_ht[0] + parsed_ht[1]) >= 1:
+            if parsed_ht and (parsed_ht + parsed_ht) >= 1:
                 key = normalize_match(item.get("match", ""))
                 if key not in seen:
                     seen.add(key)
@@ -273,7 +272,7 @@ def process_top3_sports(now_str, today_str, high_goals_picks, clean_scores, othe
     picks = []
 
     if high_goals_picks:
-        top = high_goals_picks[0]
+        top = high_goals_picks
         picks.append({
             "sport": "FOOTBALL",
             "tier": "PREMIUM EXACT SCORE",
@@ -283,3 +282,7 @@ def process_top3_sports(now_str, today_str, high_goals_picks, clean_scores, othe
             "bestHighExactScore": top.get("bestHighExactScore"),
             "odd": top.get("bestScoreOdd")
         })
+    elif clean_scores:
+        top = clean_scores
+        picks.append({
+            "sport": "FOOTBALL",
