@@ -1,22 +1,5 @@
 {
-  "updated_at_Nigeria": "2026-11-23 12:09 PM WAT",
+  "updated_at": "2026-11-23 21:43:08 WAT",
   "date": "2026-11-23",
-  "count": 2,
-  "picks": [
-    {
-      "sport": "BASKETBALL",
-      "match": "Washington Wizards vs Orlando Magic",
-      "recommended_pick": "1/2 (Home HT / Away FT)",
-      "odd": 6.0,
-      "note": "Verified Basketball HT/FT comeback line (1/2 (Home HT / Away FT)) on Football.com."
-    },
-    {
-      "sport": "TABLE TENNIS",
-      "competition": "Czech Liga Pro / TT Cup / Setka Cup (Live Daily on Football.com)",
-      "match": "Target Pre-Match Favorite (1.35 - 1.55 Match Odds)",
-      "recommended_pick": "2/1 (Away/Player 2 1st Set / Home/Player 1 Match Winner)",
-      "target_odd": "5.50 - 8.50",
-      "note": "API-Sports & Sportmonks do not cover Table Tennis; open Table Tennis -> 1st Set/Match Winner on Football.com and back 2/1 on a strong favorite."
-    }
-  ]
+  "premium_exact_score_pick": null
 }
