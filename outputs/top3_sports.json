@@ -1,10 +1,10 @@
 {
-  "updated_at": "2026-11-24 00:48:30 WAT",
+  "updated_at": "2026-11-24 01:05:45 WAT",
   "date": "2026-11-24",
   "premium_exact_score_pick": {
     "source": "Hub-Engine (scores.json)",
     "league": "Football",
-    "match": "Santos FC vs Gr\u00eamio FBPA",
+    "match": "Hibernian vs Dundee",
     "kickoff": "2026-11-24",
     "premium_exact_score": "1:0",
     "confidence_score": 67.2,
