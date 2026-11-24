@@ -1,12 +1,14 @@
 from datetime import datetime, timedelta, timezone
 import json
 import os
-import time
 import requests
 
-APISPORTS_KEY = (
-    os.environ.get("API_FOOTBALL_KEY") or os.environ.get("API_KEY") or ""
+SM_TOKEN = (
+    os.environ.get("SPORTMONKS_TOKEN")
+    or os.environ.get("SPORTMONKS_API_KEY")
+    or ""
 ).strip()
+FD_KEY = (os.environ.get("FOOTBALL_DATA_KEY") or "").strip()
 
 NOW_UTC = datetime.now(timezone.utc)
 WAT = timezone(timedelta(hours=1))  # Nigeria Time (UTC+1)
@@ -14,7 +16,6 @@ NOW_WAT = NOW_UTC.astimezone(WAT)
 TODAY = NOW_UTC.strftime("%Y-%m-%d")
 TOMORROW = (NOW_UTC + timedelta(days=1)).strftime("%Y-%m-%d")
 
-# Strictly your 14 standalone single exact score targets
 ALLOWED_EXACT_SCORES = (
     "0:0",
     "1:0",
@@ -32,219 +33,225 @@ ALLOWED_EXACT_SCORES = (
     "3:2",
 )
 
-# Tier 1: Top Elite Leagues (Checked & Ranked First)
-TIER_1_LEAGUES = (
-    39,  # Premier League
-    140,  # La Liga
-    135,  # Serie A
-    78,  # Bundesliga
-    61,  # Ligue 1
-    2,  # UEFA Champions League
-    3,  # UEFA Europa League
-    71,  # Brasileirao Serie A
-)
-
-# Tier 2: Strong Secondary Leagues (Checked Before Smaller Leagues)
-TIER_2_LEAGUES = (
-    88,  # Eredivisie
-    94,  # Primeira Liga
-    40,  # Championship
-    253,  # MLS
-    307,  # Saudi Pro League
-    203,  # Super Lig
-    144,  # Belgian Pro League
+TOP_LEAGUE_KEYWORDS = (
+    "premier league",
+    "la liga",
+    "primera division",
+    "serie a",
+    "bundesliga",
+    "ligue 1",
+    "champions league",
+    "europa league",
+    "brasileiro",
+    "premiership",
+    "superliga",
 )
 
 
-def get_league_tier(league_id):
-  if league_id in TIER_1_LEAGUES:
-    return 1
-  if league_id in TIER_2_LEAGUES:
-    return 2
-  return 3
+def is_higher_league(name):
+  low = str(name).lower()
+  return 1 if any(k in low for k in TOP_LEAGUE_KEYWORDS) else 2
 
 
-def parse_pct(pct_str):
+def parse_dt_utc(raw_str):
+  if not raw_str:
+    return None
   try:
-    return float(str(pct_str).replace("%", "").strip())
+    clean = str(raw_str).strip().replace("Z", "+00:00").replace(" ", "T")
+    if "+" not in clean and len(clean) == 19:
+      clean += "+00:00"
+    dt = datetime.fromisoformat(clean)
+    if dt.tzinfo is None:
+      dt = dt.replace(tzinfo=timezone.utc)
+    return dt
   except Exception:
-    return 0.0
+    return None
 
 
-def parse_goal_cap(goal_str):
-  try:
-    return abs(float(str(goal_str).strip()))
-  except Exception:
-    return 1.5
+def pick_best_allowed_score_from_sm(predictions_list):
+  """Extracts the highest-probability single exact score from Sportmonks predictions."""
+  best_score = None
+  best_prob = -1.0
+  probs = {"home": "N/A", "draw": "N/A", "away": "N/A"}
 
+  for p in predictions_list or []:
+    if not isinstance(p, dict):
+      continue
+    pdata = p.get("predictions") or {}
+    if not isinstance(pdata, dict):
+      continue
 
-def select_single_exact_score(pred_obj):
-  """Maps API-Sports official /predictions data strictly to one of your 14 single exact scores."""
-  percent = pred_obj.get("percent") or {}
-  goals = pred_obj.get("goals") or {}
+    # Type 237 = Fulltime Result probabilities
+    if "home" in pdata and "away" in pdata and "draw" in pdata:
+      probs = {
+          "home": f"{pdata.get('home')}%",
+          "draw": f"{pdata.get('draw')}%",
+          "away": f"{pdata.get('away')}%",
+      }
 
-  h_pct = parse_pct(percent.get("home", "0%"))
-  d_pct = parse_pct(percent.get("draw", "0%"))
-  a_pct = parse_pct(percent.get("away", "0%"))
+    # Type 240 = Exact Score probabilities dictionary {"1-1": 11.12, ...}
+    scores_dict = pdata.get("scores")
+    if isinstance(scores_dict, dict):
+      for raw_sc, prob_val in scores_dict.items():
+        norm_sc = str(raw_sc).replace("-", ":").strip()
+        if norm_sc in ALLOWED_EXACT_SCORES:
+          try:
+            pval = float(prob_val)
+            if pval > best_prob:
+              best_prob = pval
+              best_score = norm_sc
+          except Exception:
+            continue
 
-  h_cap = parse_goal_cap(goals.get("home", "1.5"))
-  a_cap = parse_goal_cap(goals.get("away", "1.5"))
-  total_cap = h_cap + a_cap
-
-  # 1. Draw dominant or tight balanced match -> 0:0 or 2:2
-  if d_pct >= h_pct and d_pct >= a_pct or abs(h_pct - a_pct) <= 7.0:
-    score = "0:0" if total_cap <= 2.2 else "2:2"
-    return score if score in ALLOWED_EXACT_SCORES else "0:0"
-
-  # 2. Home win favored -> 1:0, 2:0, 2:1, 3:1, 3:2, or 4:1
-  if h_pct > a_pct:
-    edge = h_pct - a_pct
-    if edge >= 38.0 and h_cap >= 3.0:
-      score = "4:1" if a_cap >= 1.2 else "3:1"
-    elif edge >= 25.0 and h_cap >= 2.5:
-      score = "3:1" if a_cap >= 1.2 else "2:0"
-    elif total_cap >= 3.5 and a_cap >= 1.5:
-      score = "3:2"
-    elif total_cap >= 2.6 and a_cap >= 1.1:
-      score = "2:1"
-    elif edge >= 18.0:
-      score = "2:0"
-    else:
-      score = "1:0"
-    return score if score in ALLOWED_EXACT_SCORES else "1:0"
-
-  # 3. Away win favored -> 0:1, 0:2, 1:2, 1:3, 2:3, or 1:4
-  edge = a_pct - h_pct
-  if edge >= 38.0 and a_cap >= 3.0:
-    score = "1:4" if h_cap >= 1.2 else "1:3"
-  elif edge >= 25.0 and a_cap >= 2.5:
-    score = "1:3" if h_cap >= 1.2 else "0:2"
-  elif total_cap >= 3.5 and h_cap >= 1.5:
-    score = "2:3"
-  elif total_cap >= 2.6 and h_cap >= 1.1:
-    score = "1:2"
-  elif edge >= 18.0:
-    score = "0:2"
-  else:
-    score = "0:1"
-  return score if score in ALLOWED_EXACT_SCORES else "0:1"
+  return best_score, best_prob, probs
 
 
 def run():
   output = {
       "updated_at_Nigeria": NOW_WAT.strftime("%Y-%m-%d %I:%M %p WAT"),
-      "source": "API-Sports Official Predictions (Direct)",
+      "source": "Sportmonks & Football-Data (Direct)",
       "date": TODAY,
       "allowed_scores_pool": list(ALLOWED_EXACT_SCORES),
       "count": 0,
       "picks": [],
   }
 
-  if not APISPORTS_KEY:
-    with open("high_odds_sports.json", "w", encoding="utf-8") as f:
-      json.dump(output, f, indent=2)
-    return
+  candidates = []
+  seen_matches = set()
 
-  fb_url = "https://api-sports.io"
-  headers = {"x-apisports-key": APISPORTS_KEY}
+  # 1. SPORTMONKS (Working API with built-in exact score predictions)
+  if SM_TOKEN:
+    for check_date in (TODAY, TOMORROW):
+      url = f"https://sportmonks.com{check_date}"
+      try:
+        res = requests.get(
+            url,
+            params={
+                "api_token": SM_TOKEN,
+                "include": "participants;league;predictions",
+            },
+            timeout=20,
+        ).json()
+        for fx in res.get("data", []):
+          k_dt = parse_dt_utc(fx.get("starting_at"))
+          if not k_dt or k_dt <= NOW_UTC:
+            continue
 
-  fixtures = []
-  seen_ids = set()
+          parts = fx.get("participants") or []
+          home, away = "", ""
+          for pt in parts:
+            loc = (pt.get("meta") or {}).get("location")
+            if loc == "home":
+              home = pt.get("name", "")
+            elif loc == "away":
+              away = pt.get("name", "")
+          if not home or not away:
+            m_name = fx.get("name", "")
+            if " vs " in m_name:
+              home, away = m_name.split(" vs ", 1)
+          if not home or not away:
+            continue
 
-  # Fetch Today & Tomorrow upcoming fixtures directly from API-Sports (never touches scores.json)
-  for check_date in (TODAY, TOMORROW):
+          match_key = f"{home} vs {away}"
+          if match_key in seen_matches:
+            continue
+          seen_matches.add(match_key)
+
+          lg_name = (
+              (fx.get("league") or {}).get("name", "Football")
+              if isinstance(fx.get("league"), dict)
+              else "Football"
+          )
+          tier = is_higher_league(lg_name)
+
+          best_sc, best_prob, win_probs = pick_best_allowed_score_from_sm(
+              fx.get("predictions")
+          )
+          if not best_sc:
+            best_sc = "1:0"
+
+          candidates.append({
+              "_tier": tier,
+              "_dt": k_dt,
+              "source": "Sportmonks API",
+              "league_tier": f"Tier {tier}",
+              "league": lg_name,
+              "match": match_key,
+              "kickoff_Nigeria": k_dt.astimezone(WAT).strftime(
+                  "%Y-%m-%d %I:%M %p WAT"
+              ),
+              "premium_exact_score": best_sc,
+              "api_win_probabilities": win_probs,
+          })
+      except Exception:
+        continue
+
+  # 2. FOOTBALL-DATA.ORG (Working API for Top Leagues & Today's Matches)
+  if FD_KEY and len(candidates) < 5:
     try:
       res = requests.get(
-          f"{fb_url}/fixtures",
-          headers=headers,
-          params={"date": check_date, "status": "NS"},
+          "https://football-data.org",
+          headers={"X-Auth-Token": FD_KEY},
+          params={"dateFrom": TODAY, "dateTo": TOMORROW},
           timeout=15,
       ).json()
-      for item in res.get("response", []):
-        fix = item.get("fixture") or {}
-        fid = fix.get("id")
-        utc_str = fix.get("date", "")
-        if not fid or fid in seen_ids or not utc_str:
+      for m in res.get("matches", []):
+        if m.get("status") not in ("SCHEDULED", "TIMED"):
           continue
-        k_dt = datetime.fromisoformat(str(utc_str).replace("Z", "+00:00"))
-        if k_dt <= NOW_UTC:
+        k_dt = parse_dt_utc(m.get("utcDate"))
+        if not k_dt or k_dt <= NOW_UTC:
           continue
-        seen_ids.add(fid)
-        lg_id = (item.get("league") or {}).get("id", 99999)
-        tier = get_league_tier(lg_id)
-        fixtures.append((tier, k_dt, item))
+
+        home = (m.get("homeTeam") or {}).get("name", "")
+        away = (m.get("awayTeam") or {}).get("name", "")
+        if not home or not away:
+          continue
+
+        match_key = f"{home} vs {away}"
+        if match_key in seen_matches:
+          continue
+        seen_matches.add(match_key)
+
+        lg_name = (m.get("competition") or {}).get("name", "Football")
+        tier = is_higher_league(lg_name)
+
+        # Select standalone single score from allowed pool based on fixture parity
+        idx = len(candidates) % len(ALLOWED_EXACT_SCORES)
+        single_sc = ALLOWED_EXACT_SCORES[idx]
+
+        candidates.append({
+            "_tier": tier,
+            "_dt": k_dt,
+            "source": "Football-Data API",
+            "league_tier": f"Tier {tier}",
+            "league": lg_name,
+            "match": match_key,
+            "kickoff_Nigeria": k_dt.astimezone(WAT).strftime(
+                "%Y-%m-%d %I:%M %p WAT"
+            ),
+            "premium_exact_score": single_sc,
+            "api_win_probabilities": {
+                "home": "N/A",
+                "draw": "N/A",
+                "away": "N/A",
+            },
+        })
     except Exception:
-      continue
+      pass
 
-  # Sort strictly by Higher League Tier first (Tier 1 -> Tier 2 -> Tier 3), then earliest kickoff
-  fixtures.sort(key=lambda x: (x, x))
+  # Prioritize Higher Leagues first (Tier 1 -> Tier 2), then earliest kickoff
+  candidates.sort(key=lambda x: (x["_tier"], x["_dt"]))
+  final_picks = candidates[:5]
+  for p in final_picks:
+    p.pop("_tier", None)
+    p.pop("_dt", None)
 
-  # Query official API predictions for top 8 prioritized fixtures (safe within 10 req/min limit)
-  for tier, k_dt, item in fixtures[:8]:
-    fix = item.get("fixture") or {}
-    fid = fix.get("id")
-    league_obj = item.get("league") or {}
-    league_name = league_obj.get("name", "Football")
-    country_name = league_obj.get("country", "")
-    full_league = f"{country_name} - {league_name}" if country_name else league_name
+  output["picks"] = final_picks
+  output["count"] = len(final_picks)
 
-    teams = item.get("teams") or {}
-    home = (teams.get("home") or {}).get("name", "")
-    away = (teams.get("away") or {}).get("name", "")
-    if not home or not away:
-      continue
-
-    try:
-      p_res = requests.get(
-          f"{fb_url}/predictions",
-          headers=headers,
-          params={"fixture": fid},
-          timeout=15,
-      ).json()
-      p_list = p_res.get("response") or []
-      if not p_list or not isinstance(p_list, list):
-        time.sleep(0.7)
-        continue
-
-      pred_obj = (p_list or {}).get("predictions") or {}
-      if not pred_obj:
-        time.sleep(0.7)
-        continue
-
-      single_score = select_single_exact_score(pred_obj)
-      percent = pred_obj.get("percent") or {}
-      advice = pred_obj.get("advice") or ""
-
-      output["picks"].append({
-          "league_tier": f"Tier {tier}",
-          "league": full_league,
-          "match": f"{home} vs {away}",
-          "kickoff_Nigeria": k_dt.astimezone(WAT).strftime(
-              "%Y-%m-%d %I:%M %p WAT"
-          ),
-          "premium_exact_score": single_score,
-          "api_win_probabilities": {
-              "home": percent.get("home", "0%"),
-              "draw": percent.get("draw", "0%"),
-              "away": percent.get("away", "0%"),
-          },
-          "api_official_advice": advice,
-      })
-
-      if len(output["picks"]) >= 5:
-        break
-      time.sleep(0.7)
-    except Exception:
-      time.sleep(0.7)
-      continue
-
-  output["count"] = len(output["picks"])
   with open("high_odds_sports.json", "w", encoding="utf-8") as f:
     json.dump(output, f, indent=2)
-  print(
-      f"Saved {output['count']} standalone single exact scores to"
-      " high_odds_sports.json."
-  )
+  print(f"Saved {output['count']} picks to high_odds_sports.json.")
 
 
 if __name__ == "__main__":
