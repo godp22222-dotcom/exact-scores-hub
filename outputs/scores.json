@@ -1,5 +1,5 @@
 {
-  "updated_at_Nigeria": "2026-11-24 01:24 AM WAT",
+  "updated_at_Nigeria": "2026-11-24 01:57 PM WAT",
   "count": 8,
   "status": {
     "API-Football": "OK (0)",
@@ -24,13 +24,6 @@
     },
     {
       "source": "Football-Data",
-      "match": "Galatasaray SK vs Aston Villa FC",
-      "kickoff_Nigeria": "2026-11-24 06:45 PM WAT",
-      "halfTimeExactScore": "unavailable",
-      "fullTimeExactScore": "unavailable"
-    },
-    {
-      "source": "Football-Data",
       "match": "FK Bod\u00f8/Glimt vs LASK Linz",
       "kickoff_Nigeria": "2026-11-24 06:45 PM WAT",
       "halfTimeExactScore": "unavailable",
@@ -38,7 +31,14 @@
     },
     {
       "source": "Football-Data",
-      "match": "Charlton Athletic FC vs Lincoln City FC",
+      "match": "Galatasaray SK vs Aston Villa FC",
+      "kickoff_Nigeria": "2026-11-24 06:45 PM WAT",
+      "halfTimeExactScore": "unavailable",
+      "fullTimeExactScore": "unavailable"
+    },
+    {
+      "source": "Football-Data",
+      "match": "Bristol City FC vs Wrexham AFC",
       "kickoff_Nigeria": "2026-11-24 08:45 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
