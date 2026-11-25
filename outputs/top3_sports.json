@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-11-24 13:57:26 WAT",
-  "date": "2026-11-24",
+  "updated_at": "2026-11-25 10:17:41 WAT",
+  "date": "2026-11-25",
   "premium_exact_score_pick": {
     "source": "Hub-Engine (scores.json)",
     "league": "Football",
-    "match": "Hibernian vs Dundee",
-    "kickoff": "2026-11-24",
+    "match": "Sabah FK vs FC Barcelona",
+    "kickoff": "2026-11-25",
     "premium_exact_score": "1:0",
     "confidence_score": 67.2,
     "win_probability_pct": 54,
