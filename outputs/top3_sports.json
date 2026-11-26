@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-11-25 14:00:47 WAT",
-  "date": "2026-11-25",
+  "updated_at": "2026-11-26 13:59:49 WAT",
+  "date": "2026-11-26",
   "premium_exact_score_pick": {
     "source": "Hub-Engine (scores.json)",
     "league": "Football",
-    "match": "Sabah FK vs FC Barcelona",
-    "kickoff": "2026-11-25",
+    "match": "S\u00e3o Paulo FC vs Clube do Remo",
+    "kickoff": "2026-11-26",
     "premium_exact_score": "1:0",
     "confidence_score": 67.2,
     "win_probability_pct": 54,

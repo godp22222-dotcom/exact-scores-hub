@@ -1,31 +1,17 @@
 {
-  "updated_at_Nigeria": "2026-11-25 02:00 PM WAT",
-  "count": 6,
+  "updated_at_Nigeria": "2026-11-26 01:59 PM WAT",
+  "count": 4,
   "status": {
     "API-Football": "OK (0)",
     "Sportmonks": "OK (0)",
-    "Football-Data": "OK (3)",
+    "Football-Data": "OK (1)",
     "GOAL-API": "OK (3)"
   },
   "picks": [
     {
       "source": "Football-Data",
-      "match": "Sabah FK vs FC Barcelona",
-      "kickoff_Nigeria": "2026-11-25 06:45 PM WAT",
-      "halfTimeExactScore": "unavailable",
-      "fullTimeExactScore": "unavailable"
-    },
-    {
-      "source": "Football-Data",
-      "match": "SK Slavia Praha vs Villarreal CF",
-      "kickoff_Nigeria": "2026-11-25 06:45 PM WAT",
-      "halfTimeExactScore": "unavailable",
-      "fullTimeExactScore": "unavailable"
-    },
-    {
-      "source": "Football-Data",
-      "match": "Watford FC vs Blackburn Rovers FC",
-      "kickoff_Nigeria": "2026-11-25 08:45 PM WAT",
+      "match": "S\u00e3o Paulo FC vs Clube do Remo",
+      "kickoff_Nigeria": "2026-11-27 12:00 AM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
