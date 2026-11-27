@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-11-26 13:59:49 WAT",
-  "date": "2026-11-26",
+  "updated_at": "2026-11-27 13:57:49 WAT",
+  "date": "2026-11-27",
   "premium_exact_score_pick": {
     "source": "Hub-Engine (scores.json)",
     "league": "Football",
-    "match": "S\u00e3o Paulo FC vs Clube do Remo",
-    "kickoff": "2026-11-26",
+    "match": "S\u00f8nderjyske Fodbold vs Br\u00f8ndby IF",
+    "kickoff": "2026-11-27",
     "premium_exact_score": "1:0",
     "confidence_score": 67.2,
     "win_probability_pct": 54,
