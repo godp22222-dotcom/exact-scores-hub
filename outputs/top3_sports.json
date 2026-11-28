@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-11-27 13:57:49 WAT",
-  "date": "2026-11-27",
+  "updated_at": "2026-11-28 13:46:11 WAT",
+  "date": "2026-11-28",
   "premium_exact_score_pick": {
     "source": "Hub-Engine (scores.json)",
     "league": "Football",
-    "match": "S\u00f8nderjyske Fodbold vs Br\u00f8ndby IF",
-    "kickoff": "2026-11-27",
+    "match": "Paderborn vs Schalke 04",
+    "kickoff": "2026-11-28",
     "premium_exact_score": "1:0",
     "confidence_score": 67.2,
     "win_probability_pct": 54,

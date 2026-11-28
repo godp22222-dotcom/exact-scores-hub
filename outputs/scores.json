@@ -1,5 +1,5 @@
 {
-  "updated_at_Nigeria": "2026-11-27 01:57 PM WAT",
+  "updated_at_Nigeria": "2026-11-28 01:46 PM WAT",
   "count": 9,
   "status": {
     "API-Football": "OK (0)",
@@ -10,64 +10,64 @@
   "picks": [
     {
       "source": "Sportmonks",
-      "match": "S\u00f8nderjyske Fodbold vs Br\u00f8ndby IF",
-      "kickoff_Nigeria": "2026-11-27 07:00 PM WAT",
+      "match": "Paderborn vs Schalke 04",
+      "kickoff_Nigeria": "2026-11-28 03:30 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
     {
       "source": "Sportmonks",
-      "match": "Werder Bremen vs Borussia M\u00f6nchengladbach",
-      "kickoff_Nigeria": "2026-11-27 08:30 PM WAT",
+      "match": "FC K\u00f6ln vs Elversberg",
+      "kickoff_Nigeria": "2026-11-28 03:30 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
     {
       "source": "Sportmonks",
-      "match": "Nottingham Forest vs Chelsea",
-      "kickoff_Nigeria": "2026-11-27 09:00 PM WAT",
+      "match": "Hamburger SV vs FC Bayern M\u00fcnchen",
+      "kickoff_Nigeria": "2026-11-28 03:30 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
     {
       "source": "Football-Data",
-      "match": "FC Groningen vs Willem II Tilburg",
-      "kickoff_Nigeria": "2026-11-27 08:00 PM WAT",
+      "match": "Real Betis Balompi\u00e9 vs Rayo Vallecano de Madrid",
+      "kickoff_Nigeria": "2026-11-28 02:00 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
     {
       "source": "Football-Data",
-      "match": "SV Werder Bremen vs Borussia M\u00f6nchengladbach",
-      "kickoff_Nigeria": "2026-11-27 08:30 PM WAT",
+      "match": "Frosinone Calcio vs Parma Calcio 1913",
+      "kickoff_Nigeria": "2026-11-28 03:00 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
     {
       "source": "Football-Data",
-      "match": "Stade Brestois 29 vs Paris FC",
-      "kickoff_Nigeria": "2026-11-27 08:45 PM WAT",
+      "match": "Hamburger SV vs FC Bayern M\u00fcnchen",
+      "kickoff_Nigeria": "2026-11-28 03:30 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
     {
       "source": "GOAL-API",
-      "match": "Slovakia W vs Bulgaria W",
-      "kickoff_Nigeria": "2027-06-15 04:00 PM WAT",
+      "match": "Belgium U21 vs Germany U21",
+      "kickoff_Nigeria": "2027-06-23 04:00 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
     {
       "source": "GOAL-API",
-      "match": "Spain W vs Switzerland W",
-      "kickoff_Nigeria": "2027-06-15 04:00 PM WAT",
+      "match": "Croatia U21 vs Czech Republic U21",
+      "kickoff_Nigeria": "2027-06-23 04:00 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     },
     {
       "source": "GOAL-API",
-      "match": "Slovenia W vs Hungary W",
-      "kickoff_Nigeria": "2027-06-15 04:00 PM WAT",
+      "match": "Netherlands U21 vs Norway U21",
+      "kickoff_Nigeria": "2027-06-23 04:00 PM WAT",
       "halfTimeExactScore": "unavailable",
       "fullTimeExactScore": "unavailable"
     }
